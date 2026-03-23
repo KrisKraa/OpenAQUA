@@ -82,8 +82,8 @@ Handles:
 UI
 
 🖥️ UI (planned)
-- Small SPI display (FPC ribbon)
-Status display:
+- Small SPI display 
+ Status display:
 - probe readings
 - module status
 - system alerts
