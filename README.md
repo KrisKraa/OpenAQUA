@@ -32,6 +32,7 @@ sensor processing (pH, TDS, temperature, leak detection)
 system logic & automation
 user interface (display)
 CAN bus coordination
+
 🔹 Expansion Modules (over CAN bus)
 
 Each module has its own microcontroller and handles:
