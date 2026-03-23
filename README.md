@@ -130,8 +130,8 @@ CAN protocol definition
 Expansion modules:
 power strip
 fleece roller
-dosing system
-enclosure + mechanical integration
+dosing systemen
+closure + mechanical integration
 
 🎯 End Goal
 
