@@ -133,9 +133,28 @@ Each module:
 - dosing systemen
 - closure + mechanical integration
 
+🤝 Community & Contributions
+
+ This project is still evolving, and feedback is very welcome.
+
+👉 Join the Discord:
+ https://discord.gg/xk6UMFfCmj
+
+You can:
+
+- suggest features
+- propose new modules
+- help improve the design
+- follow development progress
+👨‍🔧 About the project
+
+ I’m not an engineer by profession, but I do have experience with smaller DIY electronics projects. 
+ This project is a learning process as well as a practical build, and the goal is to create something useful, flexible, and accessible.
+
 🎯 End Goal
 
-A fully modular, affordable, and open water control system that can scale from:
-- a single aquarium to complex multi-tank or pond systems
+- A fully modular, affordable, and open water control system that can scale from:
+
+- a single aquarium to complex multi-tank, pond, or water management systems
 
 without being locked into proprietary ecosystems.
