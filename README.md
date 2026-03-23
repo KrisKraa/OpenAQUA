@@ -147,7 +147,7 @@ You can:
 - propose new modules
 - help improve the design
 - follow development progress
-👨‍🔧 About the project
+ 👨‍🔧 About the project
 
  I’m not an engineer by profession, but I do have experience with smaller DIY electronics projects. 
  This project is a learning process as well as a practical build, and the goal is to create something useful, flexible, and accessible.
