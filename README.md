@@ -1,4 +1,5 @@
-# OpenAQUA
+![Schermafbeelding 2026-03-23 042119](https://github.com/user-attachments/assets/ee96b528-7c6d-4f7f-883b-4049ffa65d9b)
+![Schermafbeelding 2026-03-23 042143](https://github.com/user-attachments/assets/190f3302-b794-434f-9612-784098911449)# OpenAQUA
 🌊 Modular Water System Controller (ESP32 + CAN)
 
 This project is a modular, scalable water system controller built around the ESP32-S3 and a CAN-based expansion architecture. It is designed to monitor and control parameters like pH, TDS, temperature, and leaks, while supporting future expansion modules such as power strips, fleece rollers, and more.
@@ -52,7 +53,8 @@ Examples:
 🔌 Features (current hardware)
 
 ⚡ Power System
-- USB-C Power Delivery input (PD)
+- USB-C 
+Power Delivery input (PD)
 - Up to ~20V negotiated input
 Onboard conversion:
 - 20V → 5V (buck)
