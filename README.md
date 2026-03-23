@@ -99,46 +99,43 @@ Status display:
 - Open & customizable
 
 📡 CAN Bus Design
-Single shared CAN bus
-Multiple modules connected in parallel
+- Single shared CAN bus
+- Multiple modules connected in parallel
 Each module:
-has unique ID
-sends status + heartbeat
-receives commands
-Main controller:
-coordinates all modules
-logs and displays data
+- has unique ID
+- sends status + heartbeat
+- receives commands
+- Main controller:
+- coordinates all modules
+- logs and displays data
 
 📈 Current Progress
 
 ✅ Completed
-Full power architecture (USB-C PD → 5V → 3.3V)
-ESP32 integration
-CAN bus with dual ports
-Sensor interfaces (pH, TDS, temp, leak)
-ADC integration (ADS1115)
-Modular system architecture defined
+- Full power architecture (USB-C PD → 5V → 3.3V)
+- ESP32 integration
+- CAN bus with dual ports
+- Sensor interfaces (pH, TDS, temp, leak)
+- ADC integration (ADS1115)
+- Modular system architecture defined
 
 🔄 In Progress
-Display integration (FPC-based TFT)
-RGB button interface
-TDS analog front-end refinement
-PCB layout
+- Display integration (FPC-based TFT)
+- RGB button interface
+- TDS analog front-end refinement
+- PCB layout
 
 🔜 Planned
-CAN protocol definition
-Expansion modules:
-power strip
-fleece roller
-dosing systemen
-closure + mechanical integration
+- CAN protocol definition
+- Expansion modules:
+- power strip
+- fleece roller
+- dosing systemen
+- closure + mechanical integration
 
 🎯 End Goal
 
 A fully modular, affordable, and open water control system that can scale from:
-
-a single aquarium
-to
-complex multi-tank or pond systems
+- a single aquarium to complex multi-tank or pond systems
 
 without being locked into proprietary ecosystems.
