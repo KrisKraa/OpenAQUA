@@ -32,6 +32,7 @@ Handles:
 - system logic & automation
 - user interface (display)
 - CAN bus coordination
+- Button (Estop, Feed, Maintenaince etc)
 
 🔹 Expansion Modules (over CAN bus)
 
