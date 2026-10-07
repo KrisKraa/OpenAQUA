@@ -57,10 +57,10 @@ Power Delivery input (PD)
 - Up to ~20V negotiated input
 Onboard conversion:
 - 20V → 5V (buck)
-- 5V → 3.3V (LDO)
+- 5V → 3.3V (LDO, AMS1117-3.3 1 A — R2)
 
 🌐 Communication
-- CAN bus (via SN65HVD230)
+- CAN bus (via TJA1051T/3, ±58 V bus-fault protected — R2)
 - 2x USB-C module ports (custom CAN + power)
 - Designed for daisy-chaining modules
 

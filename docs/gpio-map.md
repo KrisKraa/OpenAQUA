@@ -14,8 +14,8 @@ its physical pin number isn't tracked in that file).
 
 | GPIO | Module pin # | Net name | Function | Notes |
 |---|---|---|---|---|
-| EN (CHIP_PU) | 3 | ESP_EN | Chip enable / reset | R2 adds a 1 µF RC cap (Espressif-recommended), improves power-on reset timing |
-| GPIO0 | 27 | BTN_SW | Button switch input | Also the BOOT strap pin — hold the button while powering up to enter download mode |
+| EN (CHIP_PU) | 3 | ESP_EN | Chip enable / reset | R2 adds a 1 µF RC cap (Espressif-recommended), improves power-on reset timing. Also now has an on-board RESET button, SW2 |
+| GPIO0 | 27 | BTN_SW | Button switch input | Also the BOOT strap pin — hold the button while powering up to enter download mode. Also now has an on-board BOOT button, SW1 |
 | GPIO1 | 39 | P1_CC1_SENSE | Module port 1, CC1 sense | ADC1_CH0 |
 | GPIO2 | 38 | P1_CC2_SENSE | Module port 1, CC2 sense | ADC1_CH1 |
 | GPIO3 | 15 | TDS_EXCITE | TDS probe excitation | Moved here in the layout replan |
@@ -26,9 +26,9 @@ its physical pin number isn't tracked in that file).
 | GPIO8 | 12 | I2C_SCL | I2C clock (ADS1115, STUSB4500) | Unchanged |
 | GPIO9 | 17 | P2_CC1_SENSE | Module port 2, CC1 sense | ADC1_CH8. Moved here in the layout replan (was IO3) |
 | GPIO10 | 18 | P2_CC2_SENSE | Module port 2, CC2 sense | ADC1_CH9. Moved here in the layout replan (was IO7) |
-| GPIO11 | 19 | TEMP_DATA | Temperature sensor (1-wire, DS18B20-style) | Moved here in the layout replan |
-| GPIO12 | 20 | LEAK1_SIG | Leak sensor 1 input | Moved here in the layout replan |
-| GPIO13 | 21 | LEAK2_SIG | Leak sensor 2 input | Moved here in the layout replan |
+| GPIO11 | 19 | TEMP_DATA | Temperature sensor (1-wire, DS18B20-style) | Moved here in the layout replan. A 100 nF cap that was incorrectly sitting on this data line (killing 1-Wire timing — a bug present since the original board) has been moved off it; it's now 3.3 V decoupling (C45) at the sensor connector instead |
+| GPIO12 | 20 | LEAK1_SIG | Leak sensor 1 input | Moved here in the layout replan. This is an ADC2 pin, which doesn't work reliably with Wi-Fi active — firmware reads it as a plain digital input, not through the ADC. Pull-up (R20) is 1 MΩ so a resistive water path up to ~330 kΩ reads as "leak" |
+| GPIO13 | 21 | LEAK2_SIG | Leak sensor 2 input | Same as GPIO12 above, with pull-up R22 |
 | GPIO14 | 22 | P2_PWR_EN | Module port 2 VBUS switch enable | Moved here in the layout replan (was IO42) |
 | GPIO15 | 8 | DISP_RST | Display reset | Unchanged |
 | GPIO16 | 9 | DISP_BL | Display backlight | Moved here in the layout replan |

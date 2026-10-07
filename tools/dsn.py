@@ -149,11 +149,15 @@ def export_dsn(pcb, path, classes=None, keepouts=(), wiring=(), planes=(('GND', 
     w(' )')
     # pre-routed (protected) wiring
     w(' (wiring')
-    for net, layer, width_mm, pts in wiring:  # pts in easyeda units
+    for wire in wiring:  # (net, layer, width_mm, pts easyeda units[, protect])
+        net, layer, width_mm, pts = wire[:4]
+        prot = wire[4] if len(wire) > 4 else True
         P = ' '.join('%s %s' % fr.d(x, y) for x, y in pts)
-        w('  (wire (path %s %d %s) (net %s) (type protect))' % (layer, width_mm * 1000, P, q(net)))
-    for net, x, y in getattr(export_dsn, 'vias', []):
-        X, Y = fr.d(x, y); w('  (via %s %s %s (net %s) (type protect))' % (q(vname), X, Y, q(net)))
+        w('  (wire (path %s %d %s) (net %s)%s)' % (layer, width_mm * 1000, P, q(net), ' (type protect)' if prot else ''))
+    for v in getattr(export_dsn, 'vias', []):
+        net, x, y = v[:3]
+        prot = v[3] if len(v) > 3 else True
+        X, Y = fr.d(x, y); w('  (via %s %s %s (net %s)%s)' % (q(vname), X, Y, q(net), ' (type protect)' if prot else ''))
     w(' )')
     w(')')
     open(path, 'w').write('\n'.join(out) + '\n')

@@ -67,7 +67,7 @@ def xform_sub(sub, xf):
         f[2], f[3] = map(_fmt, xf.pt(float(f[2]), float(f[3])))
         if f[10].strip(): f[10] = xf.pts(f[10])
         f[11] = _fmt(xf.rot(f[11]))
-        if len(f) > 21 and ',' in f[-1]:
+        if len(f) >= 20 and ',' in f[-1]:
             x, y = map(float, f[-1].split(',')); X, Y = xf.pt(x, y); f[-1] = _fmt(X) + ',' + _fmt(Y)
         if len(f) > 14 and f[14].strip():  # slot hole points
             f[14] = xf.pts(f[14])

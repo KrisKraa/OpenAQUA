@@ -28,12 +28,17 @@ at all.
   20 V.
 - **Q1 (P-FET power switch) gate tied to GND.** This held the FET permanently on with Vgs at
   -20 V — right at the AO3407's absolute ±20 V Vgs rating, with zero margin. **R2:** added a
-  100 kΩ gate-source resistor plus a 22 kΩ series resistor to VBUS_EN_SNK, as in ST's reference
-  design. Vgs is now around -16 V, inside the part's rated margin.
+  100 kΩ gate-source resistor plus a series resistor (R37) to VBUS_EN_SNK, as in ST's reference
+  design. R37 was originally 22 kΩ; an independent review changed it to **33 kΩ**, giving
+  Vgs ≈ -15 V at a 20 V input and ≈ -3.75 V at 5 V — more margin under the FET's ±20 V rating,
+  across the whole input range the board can actually see.
 - **USB data lines not connected to the ESP32.** There was no way to flash firmware over the
   USB-C input port at all. **R2:** D+/D− now routed to the ESP32 (IO20/IO19) through the
   existing 22 Ω series resistors, with a USBLC6-2SC6 ESD protector (U16) added.
 - **USB-C shells not grounded.** **R2:** all three USB-C connector shells tied to GND.
+- **STUSB4500's VBUS_VS_DISCH pin had no series resistor.** This pin discharges VBUS after a
+  PD source is removed, and the datasheet requires a series resistor to keep that discharge
+  current at or below 50 mA. **R2:** added R57, 1 kΩ, between VBUS_VS_DISCH and raw VBUS.
 
 ## Buck converter (MP1584)
 
@@ -47,7 +52,9 @@ at all.
   series R+C network on COMP for a 5 V output, not a lone cap. **R2:** 100 kΩ in series with a
   150 pF cap, per the datasheet's 5 V table.
 - **EN tied straight to the 20 V rail.** Worked, but with no resistor in the path. **R2:**
-  routed through a 100 kΩ pull-up from +20V_BUS instead, as the datasheet recommends.
+  routed through a 100 kΩ pull-up from +20V_BUS instead. This follows common practice — the
+  MP1584's own datasheet reference design ties EN to VIN the same way — so this isn't a
+  leftover shortcut, it's the intended way to wire this pin.
 - Output (4.8 V, from the 100 kΩ/20 kΩ feedback divider against the 0.8 V reference) was
   already fine for feeding the downstream 3.3 V LDO — unchanged.
 
@@ -63,11 +70,27 @@ at all.
   — each CC pin gets a 10 kΩ pull-up to 3.3 V plus a 1 kΩ series resistor into an ESP32 ADC
   pin, so firmware can check what's actually plugged in before switching VBUS on at all (see
   `docs/module-port-spec.md` for the full identification logic).
+- **Module identification resistor revised: 47 kΩ → 22 kΩ.** The module-side CC resistor was
+  originally spec'd at 47 kΩ (≈2.72 V with the controller's 10 kΩ pull-up). An independent
+  review flagged that the ESP32-S3's ADC, at the 12 dB attenuation needed for this voltage
+  range, only reads reliably up to about 2.9 V — 2.72 V left almost no margin, and an empty
+  port (which pulls all the way to 3.3 V) would itself saturate the ADC input. **R2:** the
+  module-side resistor is now spec'd at 22 kΩ (≈2.27 V), with a narrower suggested module
+  window of 2.0–2.5 V, comfortably clear of both the sink window and the ADC's ceiling. Also
+  worth knowing: a legacy USB-A-to-C cable's 56 kΩ-to-5V pull-up produces the same saturated
+  reading as an empty port, so it correctly leaves the port off rather than being mistaken for
+  a module. See `docs/module-port-spec.md` for the full table.
 - Port mapping (current, after the layout-driven GPIO replan — see the ESP32 section below):
   **Port 1 = USBC2** (silk "CAN1"): CC1 → IO1, CC2 → IO2, power enable → IO42.
   **Port 2 = USBC3** (silk "CAN2"): CC1 → IO9, CC2 → IO10, power enable → IO14.
 - Each port is protected by a 0.3 A-hold PTC fuse (F2 on port 1, F1 on port 2), giving roughly
   6 W of budget per port at 20 V.
+- **Switching a port on could brown out the 20 V bus.** Enabling a port's FET into a module
+  with any real input capacitance draws an inrush current that, without anything to soften it,
+  could sag +20V_BUS enough to disturb everything else on it. **R2:** added bulk capacitance
+  on the bus itself (C50/C51, 10 µF 50 V each) plus a gate-drain capacitor on each port switch
+  (C52 on port 1, C53 on port 2, 22 nF) that gives each FET roughly a 0.5 ms soft-start ramp
+  instead of slamming on instantly.
 
 ## ESP32
 
@@ -91,6 +114,24 @@ at all.
   it would never light. **R2:** footprint orientation corrected. LED4 (along with LED5 and
   LED6) is now also driven through its own series resistor (R27/R29/R28 respectively) as part
   of the GPIO replan, rather than straight off the GPIO pin.
+- **A 100 nF capacitor on the DS18B20 temperature sensor's 1-Wire data line.** This bug was
+  present in the original board too, not just the first R2 draft. 1-Wire relies on fast edges
+  on a single shared data line; with a 4.7 kΩ bus pull-up, 100 nF there gives a rise time of
+  about 470 µs — far too slow for the bus timing, so the sensor would simply never answer.
+  **R2:** C45 moved off the data line entirely; it's now a 3.3 V decoupling cap at the
+  temperature connector (U8) instead.
+- **Leak inputs read on the wrong kind of pin.** The leak sensor inputs land on GPIO12/13,
+  which are ADC2 pins — and ADC2 can't be used reliably while Wi-Fi is active on the ESP32-S3,
+  which this board needs. **R2:** firmware reads these digitally instead of as analog inputs,
+  and the pull-ups (R20, R22) were changed from 10 kΩ to **1 MΩ** so that a resistive water
+  path between the leak probe's pads — typically tens of kΩ for aquarium water, up to roughly
+  330 kΩ — pulls the digital input low enough to register as "leak." The original 10 kΩ
+  pull-up would have needed a water path under about 3.3 kΩ to register at all, which is far
+  lower resistance than a real leak would actually present.
+- **On-board bring-up buttons added.** **R2:** SW1 (wired to IO0 / BTN_SW_A) acts as a BOOT
+  button, and SW2 (wired to EN / ESP_EN) acts as a RESET button — both directly on the board,
+  so the enclosure's front-panel button isn't needed just to flash firmware or reset the chip
+  during bring-up.
 
 ## pH front end (LMP91200)
 
@@ -110,6 +151,12 @@ at all.
 
 ## CAN bus
 
+- **CAN transceiver wasn't rated for the voltage sharing its connector.** The board used an
+  SN65HVD230, which is only rated for −4…+16 V on its bus pins. But CAN_H/CAN_L share the
+  module port's USB-C connector and cable with the port's switched power, which can be up to
+  20 V — above the transceiver's bus-fault rating. **R2:** swapped to an NXP **TJA1051T/3**
+  (LCSC C38695), rated for ±58 V bus faults, with the same SOIC-8 pinout. It runs from VCC on
+  the 5 V rail and VIO on 3.3 V.
 - **R4/R5 did nothing.** These were meant to be 10 Ω series resistors on CAN_H/CAN_L, but both
   pads of each were wired to the same net — zero volts across them, no effect. **R2:** removed.
 - **120 Ω termination is now a jumper (R55, 0 Ω).** Fit it when the controller sits at one end
@@ -117,6 +164,12 @@ at all.
   the middle of the bus) and terminate instead at the two far-end modules.
 
 ## Parts & voltage ratings
+
+- **3.3 V LDO was at its current limit.** The original TLV75533 is only rated for 500 mA, and
+  at the currents this board actually draws it would end up dissipating around 0.6 W in a
+  SOT-23-5 package — more than that small a package can comfortably shed. **R2:** swapped to
+  an **AMS1117-3.3**, a 1 A LDO in a SOT-223 package with much more thermal headroom. Its
+  output capacitor (C36) also needed to grow to meet the AMS1117's own minimum — now 22 µF.
 
 Several capacitors were rated below the voltage they actually see:
 
@@ -156,6 +209,21 @@ holes, 3 USB-C openings, and 3 LED slots, all within 0.25 mm). The button is a l
 - **The PCB layout itself isn't finished yet** — the plan above is a work in progress.
 - **Firmware** still needs to actually drive all of this (see below) — none of the board fixes
   do anything on their own without firmware support.
+- **No TVS protection on the USB-C input's VBUS/CC lines.** Considered low risk since PD
+  sources always start by presenting 5 V before any higher voltage is negotiated, but a later
+  revision could add an ESDA25P35 (or similar) at R3 on that input for extra margin.
+- **Module ports have no reverse-current blocking.** The port switch FETs (AO3407) still
+  conduct through their body diode in reverse even when switched off, so a self-powered module
+  could in principle back-feed the controller while it's unpowered or that port is disabled.
+  Worth an eFuse (e.g. a TPS25947) in a later revision at R3; see also the warning in
+  `docs/module-port-spec.md` telling module designers not to source current onto VBUS.
+- **Port shutoff speed matters.** Firmware needs to switch a port's VBUS off quickly — on the
+  order of 1 ms — once its CC line reads open, so a module can't be left powered after it's
+  unplugged for longer than that.
+- **RGB button LED resistors (220 Ω) assume a common-cathode LED with no built-in resistors.**
+  If the actual button part turns out to have different internal resistance, or isn't
+  common-cathode, green and blue may end up visibly dimmer than red. Worth double-checking
+  against the specific button's datasheet before finalizing.
 
 ## Firmware to-do for R2 bring-up
 
@@ -168,6 +236,13 @@ holes, 3 USB-C openings, and 3 LED slots, all within 0.25 mm). The button is a l
 - Read pH differentially: ADS1115 AIN1 − AIN3, not AIN1 against a fixed reference.
 - Implement the new GPIO map end to end (see `docs/gpio-map.md`) — in particular, the four new
   ADC1 CC-sense inputs and the two new port power-enable outputs.
+- Check the STUSB4500's negotiated PD contract over I2C before enabling any module port — the
+  bus voltage feeding the ports isn't always 20 V (a plain PC USB port behaves as 5 V, and a
+  charger that can't do 20 V may fall back to 15 V), so firmware needs to know what's actually
+  on the bus rather than assuming 20 V.
+- Switch a port's VBUS off within about 1 ms of its CC line reading open.
+- Read the leak inputs (GPIO12/13) as plain digital inputs, not through the ADC — they're on
+  ADC2, which doesn't work reliably with Wi-Fi active.
 
 ## Bring-up checklist (first assembled board)
 
@@ -179,9 +254,13 @@ holes, 3 USB-C openings, and 3 LED slots, all within 0.25 mm). The button is a l
 3. **Measure the rails in order**: VBUS_RAW first, then +20V_BUS after Q1, then the buck output
    (~4.8 V), then the 3.3 V LDO output. Confirm each stage before trusting the next one.
 4. **Check STUSB4500 status over I2C** (address 0x28) to confirm PD negotiation actually
-   succeeded and see the attach state.
+   succeeded, see the attach state, and confirm which PDO was actually accepted — don't assume
+   it's 20 V; a plain USB port or a charger that can't do 20 V will leave the bus at 5 V or
+   15 V instead.
 5. **Flash firmware over USB-C** now that D+/D− are wired — confirm the ESP32 enumerates, and
-   that holding the button (IO0) while powering up enters download mode as expected.
+   that holding the button (IO0) while powering up enters download mode as expected. The board
+   also has on-board BOOT (SW1) and RESET (SW2) buttons, so this doesn't depend on the
+   enclosure's front-panel button being wired up yet.
 6. **Leave the module ports disabled** (they default off) and verify the CC-sense ADC readings
    match the expected voltage table in `docs/module-port-spec.md` before enabling either port.
 7. Only then, **connect an actual module** and confirm the port switches on within the module
