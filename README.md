@@ -161,3 +161,17 @@ You can:
 - a single aquarium to complex multi-tank, pond, or water management systems
 
 without being locked into proprietary ecosystems.
+
+## Hardware revision R2 (October 2026)
+
+A design review of the original main controller board turned up a number of issues that would
+have stopped the first assembled board from powering up at all — most notably the USB-C PD
+chip (STUSB4500) was wired so it could never leave reset, and a buck converter catch diode was
+installed backwards. R2 fixes these plus a batch of smaller issues (capacitor voltage ratings,
+missing CC-based module identification on the module ports, an ESP32 GPIO remap, and a rework
+of the pH analog front end), and adds proper USB-C identification for expansion modules.
+
+See:
+- [`docs/r2-design-review.md`](docs/r2-design-review.md) — what changed and why, block by block
+- [`docs/module-port-spec.md`](docs/module-port-spec.md) — spec for anyone designing an expansion module
+- [`docs/gpio-map.md`](docs/gpio-map.md) — full ESP32-S3 pin map

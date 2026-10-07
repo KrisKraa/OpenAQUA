@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"cd /private/tmp/claude-501/-Users-kris-Documents-Claude-Local/b61844df-efaa-4680-8dcb-24ec437a143c/scratchpad && curl -sL -m 90 -A \\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWe...",
+  "error": "Exit code 1\nmp2.pdf: HTML document text, ASCII text, with very long lines (4313), with CRLF line terminators",
+  "timestamp": "2026-10-07T23:27:53.891Z",
+  "retry_count": 1
+}

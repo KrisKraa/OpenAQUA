@@ -69,7 +69,11 @@ def apply_changes(p):
         p.remove(ref)
     for ref, (part, value, tmpl) in CH.SWAP.items():
         i, old = p.lib(ref)
-        if tmpl:
+        if tmpl and tmpl.startswith('lcsc:'):
+            new = footprint_from_lcsc(tmpl[5:], ref, value)
+            new.place(*old.xy, old.rot)
+            lib = new
+        elif tmpl:
             new = p.clone(tmpl, ref, value)
             nets = {f[8]: f[7] for _, f in old.pads()}
             for j, f in list(new.pads()):

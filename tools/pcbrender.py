@@ -5,7 +5,7 @@ from pcbtool import *
 
 COL = {'1': '#c83232', '2': '#3264c8', '11': '#b0a030', '21': '#999966', '22': '#008000'}
 
-def render(path, out, overlays=None, nets=True, title=''):
+def render(path, out, overlays=None, nets=True, title='', rats=False, zones=None):
     p = Pcb(path)
     sh = p.shape
     xs = []; ys = []
@@ -48,6 +48,28 @@ def render(path, out, overlays=None, nets=True, title=''):
                 X, Y = T(cx, cy); el.append(f'<circle cx="{X:.3f}" cy="{Y:.3f}" r="{hr*U:.3f}" fill="#222"/>')
         X, Y = T(*l.xy)
         el.append(f'<text x="{X:.2f}" y="{Y:.2f}" font-size="1.3" fill="#000" text-anchor="middle" font-family="Arial" font-weight="bold" opacity="0.75">{html.escape(l.ref)}</text>')
+    for z in zones or []:  # (label, x0,y0,x1,y1 mm board coords, colour) or circle (label,cx,cy,r,colour)
+        if len(z) == 6:
+            lab, a, b, c, d, col = z
+            el.append(f'<rect x="{a}" y="{b}" width="{c-a}" height="{d-b}" fill="{col}" opacity="0.12" stroke="{col}" stroke-width="0.2" stroke-dasharray="1,0.6"/><text x="{a+0.5}" y="{b+2}" font-size="1.6" fill="{col}" font-family="Arial">{html.escape(lab)}</text>')
+        else:
+            lab, cx, cy, r, col = z
+            el.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{col}" opacity="0.12" stroke="{col}" stroke-width="0.2" stroke-dasharray="1,0.6"/><text x="{cx-r+0.5}" y="{cy}" font-size="1.6" fill="{col}" font-family="Arial">{html.escape(lab)}</text>')
+    if rats:
+        pads = {}
+        for i, l in p.libs():
+            for num, net, lay, shp, cx, cy, w, h, hr, pts in l.pad_geoms():
+                if net and net != 'GND': pads.setdefault(net, []).append(T(cx, cy))
+        import math
+        for net, pts in pads.items():
+            if len(pts) < 2: continue
+            inn = [pts[0]]; rest = pts[1:]
+            while rest:
+                best = min(((math.dist(a, b), a, b) for a in inn for b in rest))
+                _, a, b = best
+                col = '#e08000' if net in ('+20V_BUS', '+5V_MAIN', '+3V3', 'USB_VBUS_RAW') else '#5050ff'
+                el.append(f'<line x1="{a[0]:.2f}" y1="{a[1]:.2f}" x2="{b[0]:.2f}" y2="{b[1]:.2f}" stroke="{col}" stroke-width="0.12" opacity="0.7"/>')
+                inn.append(b); rest.remove(b)
     for o in overlays or []:
         el.append(o(T))
     # square canvas so macOS quicklook thumbnails don't crop it
@@ -57,5 +79,12 @@ def render(path, out, overlays=None, nets=True, title=''):
            f'<text x="0" y="-2.5" font-size="2.5" font-family="Arial">{html.escape(title)}</text>' + ''.join(el) + '</svg>')
     open(out, 'w').write(svg)
 
+# mechanical context (board mm, y down), derived from the enclosure STEP
+ZONES = [
+    ('display above (11 mm)', 19, 17, 100, 67, '#008080'),
+    ('antenna keep-out', 57, 0, 83, 7.5, '#d00000'),
+    ('button above', 117, 31.5, 8.1, '#a000a0'),
+]
+
 if __name__ == '__main__':
-    render(sys.argv[1], sys.argv[2], title=sys.argv[3] if len(sys.argv) > 3 else '')
+    render(sys.argv[1], sys.argv[2], title=sys.argv[3] if len(sys.argv) > 3 else '', rats='--rats' in sys.argv, zones=ZONES if '--zones' in sys.argv else None)
