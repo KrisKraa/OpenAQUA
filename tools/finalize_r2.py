@@ -30,6 +30,7 @@ def copper_area(template, layer, net, poly, clearance_mm):
     gid = new_gid()
     f[2] = layer; f[3] = net; f[4] = path_of(poly); f[5] = _fmt(clearance_mm / U)
     f[7] = gid; f[10] = '[]'; f[12] = gid
+    if len(f) > 18: f[18] = _fmt(0.3 / U)   # thermal spoke width 0.3 mm (was 0 in the template)
     return '~'.join(f)
 
 
@@ -50,14 +51,8 @@ def move_text(p, text, x, y):
 
 
 # Hand-finished links the autorouter left open (checked by verify_pcb afterwards)
-POST = [
-    # Q1 drain (via at 13.8,15.2) -> trunk at C50, bottom layer clear of the +5 V sense run
-    ('+20V_BUS', '2', 0.5, [(13.8, 15.2), (16.2, 17.6), (16.2, 20.6), (16.9, 21.3), (21.5, 21.3)]),
-    ('+20V_BUS', '1', 0.5, [(21.5, 21.3), (22.91, 21.3)]),
-    # +5 V main (via 39.6,19.45) -> the R24 / CAN-VCC branch (router's via at 36.21,25.68)
-    ('+5V_MAIN', '2', 0.5, [(39.6, 19.45), (39.6, 22.0), (36.21, 25.39), (36.21, 25.68)]),
-]
-POST_VIAS = [('+20V_BUS', 21.5, 21.3)]
+POST = []        # hand links live in route_r2.HAND (routed around by Freerouting)
+POST_VIAS = []
 
 
 def main():
@@ -145,6 +140,23 @@ def main():
         if s.startswith('TEXT') and '~OpenAQUA_R1~' in s:
             f = s.split('~'); f[10] = 'OpenAQUA_R2'; f[11] = ''
             p.shape[i] = '~'.join(f)
+    # silkscreen: readable reference designators next to their parts
+    import silk_r2
+    e = int(math.ceil(silk_r2.EDGE / V.RES))
+    inner_m = ndimage.binary_erosion(R2.board, structure=np.ones((2 * e + 1, 2 * e + 1), bool))
+    def board_ok(x, y):
+        i, j = int(y / V.RES), int(x / V.RES)
+        return 0 <= i < inner_m.shape[0] and 0 <= j < inner_m.shape[1] and inner_m[i, j]
+    hl = [(hx, hy, hr) for hx, hy, hr in holes]
+    for _, l in p.libs():
+        for sub in l.parts[1:]:
+            f = sub.split('~')
+            if f[0] == 'HOLE': hl.append(((float(f[1]) - X0) * U, (float(f[2]) - Y0) * U, float(f[3]) * U))
+    placed, obst, failed = silk_r2.place_labels(p, hl, board_ok)
+    logo = silk_r2.place_logo(p, placed, obst, board_ok)
+    moved = silk_r2.fix_free_labels(p, placed, obst, board_ok)
+    print(logo)
+    print('silk: %d labels placed, no spot for %s; captions moved: %s' % (len(placed), failed, moved))
     # manufacturing normalisation: JLCPCB 2-layer limits (min track 0.127 mm, standard via 0.6/0.3)
     for i, s in enumerate(p.shape):
         f = s.split('~')
@@ -158,6 +170,11 @@ def main():
         'Default': {'trackWidth': mm(0.15), 'clearance': mm(0.15), 'viaHoleDiameter': mm(0.6), 'viaHoleD': mm(0.3)},
         'isRealtime': True, 'isDrcOnRoutingOrPlaceVia': False, 'checkObjectToCopperarea': True, 'showDRCRangeLine': True,
     }
+    # every footprint header needs field 7 = '1' for EasyEDA to load it fully
+    for i, s in enumerate(p.shape):
+        if s.startswith('LIB~'):
+            parts_ = s.split('#@$'); h = parts_[0].split('~')
+            if h[7] != '1': h[7] = '1'; parts_[0] = '~'.join(h); p.shape[i] = '#@$'.join(parts_)
     p.save(DST)
     print('stitching vias:', added, '->', DST)
 

@@ -12,6 +12,10 @@ def holes(p):
         if f[0] == 'VIA': h.append(((float(f[1]) - X0) * U, (float(f[2]) - Y0) * U, float(f[5]) * U, 'via ' + f[4]))
         elif f[0] == 'HOLE': h.append(((float(f[1]) - X0) * U, (float(f[2]) - Y0) * U, float(f[3]) * U, 'mounting hole'))
     for _, l in p.libs():
+        for sub in l.parts[1:]:
+            f = sub.split('~')
+            if f[0] == 'HOLE':  # non-plated holes inside footprints (e.g. USB-C pegs)
+                h.append(((float(f[1]) - X0) * U, (float(f[2]) - Y0) * U, float(f[3]) * U, '%s.npth' % l.ref))
         for _, f in l.pads():
             if float(f[9] or 0) > 0:
                 h.append(((float(f[2]) - X0) * U, (float(f[3]) - Y0) * U, float(f[9]) * U, '%s.%s' % (l.ref, f[8])))

@@ -49,7 +49,9 @@ def footprint_from_lcsc(part, ref, value):
     attrs.update(lcsc_attrs(part))
     head = ['LIB', str(h['x']), str(h['y']),
             '`'.join(k + '`' + str(v) for k, v in attrs.items()) + '`',
-            '0', '', new_gid(), '0', h.get('uuid', ''), str(h.get('utime', '')), '0', '', 'yes', '', '']
+            '0', '', new_gid(), '1', h.get('uuid', ''), str(h.get('utime', '')), '0', '', 'yes', '', '']
+    # header field 7 must be '1' (as in every footprint EasyEDA writes): with '0' the
+    # editor drops/half-loads the footprint and its pads are ignored by copper pours
     shapes = []
     for s in pk['shape']:
         if s.startswith('TEXT~P~'):

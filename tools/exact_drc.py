@@ -15,6 +15,11 @@ def shapes(p):
     M = lambda x, y: ((x - x0) * U, (y - y0) * U)
     out = []
     for _, l in p.libs():
+        for sub in l.parts[1:]:
+            f = sub.split('~')
+            if f[0] == 'HOLE':
+                x, y = M(float(f[1]), float(f[2]))
+                for L in ('1', '2'): out.append((L, '#hole', Point(x, y).buffer(float(f[3]) * U), '%s.npth' % l.ref))
         for i, f in l.pads():
             shp, net, lay, num = f[1], f[7], f[6], f[8]
             cx, cy = M(float(f[2]), float(f[3]))
@@ -38,6 +43,9 @@ def shapes(p):
         elif f[0] == 'VIA':
             x, y = M(float(f[1]), float(f[2]))
             for L in ('1', '2'): out.append((L, f[4], Point(x, y).buffer(float(f[3]) * U / 2), 'via'))
+        elif f[0] == 'HOLE':
+            x, y = M(float(f[1]), float(f[2]))
+            for L in ('1', '2'): out.append((L, '#hole', Point(x, y).buffer(float(f[3]) * U), 'hole'))
         elif f[0] == 'SOLIDREGION' and f[4] == 'solid' and f[1] in ('1', '2') and f[2]:
             n = [float(v) for v in re.findall(r'-?\d+\.?\d*', f[3])]
             out.append((f[1], f[2], Polygon([M(n[k], n[k + 1]) for k in range(0, len(n), 2)]), 'region'))

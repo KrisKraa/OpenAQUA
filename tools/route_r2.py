@@ -62,7 +62,22 @@ HAND = [
     # buck input caps -> trunk (around R39 / C50's GND pad)
     ('+20V_BUS', '1', 0.6, [(27.49, 15.1), (28.9, 16.5), (28.9, 22.0), (28.3, 22.6), (22.91, 22.6)]),
     ('+20V_BUS', '1', 0.8, [(116.1, 38.5), (117.0, 39.4), (117.0, 57.6), (118.4, 59.0), (120.15, 59.0)]),
-    ('+20V_BUS', '1', 0.4, [(36.85, 22.5), (36.85, 21.1), (28.9, 21.1)]),     # R25 (LED1) feed
+    ('+20V_BUS', '1', 0.4, [(38.35, 22.5), (38.35, 21.1), (28.9, 21.1)]),     # R25 (LED1) feed
+    # Q1 drain (via 13.8,15.2) -> trunk at C50, bottom layer
+    ('+20V_BUS', '2', 0.5, [(13.8, 15.2), (16.2, 17.6), (16.2, 20.6), (16.9, 21.3), (21.5, 21.3)]),
+    ('+20V_BUS', '1', 0.5, [(21.5, 21.3), (22.91, 21.3)]),
+    # +5 V to R24 (LED2) and on to the CAN transceiver
+    ('+5V_MAIN', '1', 0.4, [(42.0, 19.75), (39.8, 19.75), (39.8, 24.6), (38.35, 24.6)]),
+    # +5 V to the CAN transceiver (VCC, pin 3): beside the 20 V trunk, bottom hop under its
+    # vertical, then into pin 3 from below via C8 (keeps TXD/RXD free to leave)
+    ('+5V_MAIN', '1', 0.4, [(39.8, 24.6), (39.8, 36.9), (40.4, 37.5), (115.3, 37.5)]),
+    ('+5V_MAIN', '2', 0.5, [(115.3, 37.5), (118.8, 37.5)]),
+    ('+5V_MAIN', '1', 0.4, [(118.8, 37.5), (118.8, 45.4), (119.4, 46.0), (133.63, 46.0)]),
+    ('+5V_MAIN', '1', 0.4, [(133.63, 46.8), (133.63, 43.57)]),
+    # pH VOCM -> ADS1115 AIN3: R56 -> C49 on top, then a bottom hop into pin 7 (avoids the I2C exits)
+    ('PH_VOCM_FILT', '1', 0.25, [(39.35, 56.0), (40.25, 56.9), (43.4, 56.9), (44.4, 57.5)]),
+    ('PH_VOCM_FILT', '2', 0.25, [(44.4, 57.5), (44.4, 53.0), (46.25, 51.15), (46.25, 49.9)]),
+    ('PH_VOCM_FILT', '1', 0.2, [(46.25, 49.9), (46.25, 50.86)]),
     # ---- everything inside the buck zone is hand-routed; the zone is fenced off for the router
     ('U13_4', '1', 0.25, [(24.59, 4.25), (19.8, 4.25)]),                       # FB -> R9/R10 (short)
     ('BUCK_COMP', '1', 0.25, [(25.86, 4.48), (25.86, 2.5), (24.96, 1.6), (22.75, 1.6)]),
@@ -88,6 +103,10 @@ HAND = [
     ('USB_D+', '1', 0.25, [(7.12, 28.15), (11.55, 28.15), (11.55, 30.5)]),
     ('USB_D-', '1', 0.25, [(7.12, 26.65), (7.8, 26.65), (7.8, 27.65)]),
     ('USB_D-', '1', 0.25, [(7.12, 27.65), (13.45, 27.65), (13.45, 30.5)]),
+    # ESP32 corner GND pins (1, 40) sit at the antenna cut-out edge where the pour can't reach:
+    # tie them under the module to its central GND pad array
+    ('GND', '1', 0.3, [(61.25, 7.65), (62.2, 7.65), (66.5, 11.95), (67.1, 12.55), (67.1, 13.8)]),
+    ('GND', '1', 0.3, [(78.75, 7.65), (77.8, 7.65), (73.5, 11.95), (69.9, 11.95), (69.9, 13.8)]),
     # pH: INP straight from the U.FL centre pin, guard traces either side
     ('PH_INP', '1', 0.25, [(23.92, 55.67), (24.6, 55.83), (28.13, 55.83)]),
     ('PH_GUARD', '1', 0.25, [(28.13, 55.18), (25.3, 55.18)]),
@@ -99,7 +118,9 @@ HAND = [
 ]
 HAND_VIAS = [('PH_GUARD', 25.3, 55.18), ('PH_GUARD', 25.3, 56.48), ('GND', 45.7, 54.15),
              ('USB_D+', 5.25, 27.15, 0.5, 0.25), ('USB_D+', 5.25, 28.15, 0.5, 0.25),
-             ('+20V_BUS', 26.7, 1.45), ('+20V_BUS', 13.8, 15.2), ('+5V_MAIN', 39.6, 19.45), ('+5V_MAIN', 22.4, 6.9)]
+             ('+20V_BUS', 26.7, 1.45), ('+20V_BUS', 13.8, 15.2), ('+5V_MAIN', 39.6, 19.45), ('+5V_MAIN', 22.4, 6.9),
+             ('+20V_BUS', 21.5, 21.3), ('PH_VOCM_FILT', 44.4, 57.5), ('PH_VOCM_FILT', 46.25, 49.9),
+             ('+5V_MAIN', 115.3, 37.5), ('+5V_MAIN', 118.8, 37.5)]
 # buck zone fenced off for the autorouter (both layers); its nets are all in HAND
 BUCK_ZONE = [(17.2, 0.0, 49.0, 12.0), (23.4, 12.0, 49.0, 20.4)]
 # bottom-layer guard patch under the pH input (net PH_GUARD), GND plane clears it
@@ -309,6 +330,13 @@ def main(passes=40):
     obstacles = [('rect', ['F.Cu', 'B.Cu'], ANTENNA)]
     obstacles += [('rect', ['F.Cu', 'B.Cu'], z) for z in BUCK_ZONE]
     obstacles += [('circle', ['F.Cu', 'B.Cu'], (hx, hy, 3.3 + 0.8)) for hx, hy in HOLES]
+    # non-plated holes inside footprints (USB-C locating pegs): keep copper 0.3 mm away
+    for _, l in p.libs():
+        for sub in l.parts[1:]:
+            f = sub.split('~')
+            if f[0] == 'HOLE':
+                hx, hy = (float(f[1]) - X0) * U, (float(f[2]) - Y0) * U
+                obstacles.append(('circle', ['F.Cu', 'B.Cu'], (hx, hy, 2 * float(f[3]) * U + 0.6)))
     # 0.4 mm copper-free strip along the board edge (Freerouting ignores edge clearance)
     edge = [((x - X0) * U, (y - Y0) * U) for x, y in D.outline_pts(p)]
     for a, b in zip(edge, edge[1:] + edge[:1]):
@@ -350,8 +378,27 @@ def main(passes=40):
     print('stage 2 (both layers):', 'ok' if ok2 else 'FAILED')
     st2 = D.import_ses(p, s2, fr) if ok2 else []
 
-    # stage-2 session holds every non-protected wire (stage-1 survivors + new ones)
-    p.shape.extend(shapes + (st2 if ok2 else st1))
+    final = st2 if ok2 else st1
+    import re as _re
+    log2 = open(os.path.join(work, 'r2_stage2.log')).read()
+    m = _re.findall(r'final score: [\d.]+ \((\d+) unrouted', log2)
+    if ok2 and m and int(m[-1]) > 0:
+        w3 = list(wiring); v3 = [v for v in D.export_dsn.vias if len(v) == 3 or v[3]][:0] + [
+            (net, *E(x, y)) for net, x, y in [(v[0], v[1], v[2]) for v in HAND_VIAS if v[0] != 'GND']]
+        for s in st2:
+            f = s.split('~')
+            if f[0] == 'TRACK':
+                n = [float(v) for v in f[4].split()]
+                w3.append((f[3], 'F.Cu' if f[2] == '1' else 'B.Cu', float(f[1]) * U, list(zip(n[0::2], n[1::2])), False))
+            elif f[0] == 'VIA':
+                v3.append((f[4], float(f[1]), float(f[2]), False))
+        D.export_dsn.vias = v3
+        d3, s3 = os.path.join(work, 'r2_stage3.dsn'), os.path.join(work, 'r2_stage3.ses')
+        write_dsn(p, d3, w3, obstacles, b_cu=True, b_cost=(2.0, 3.0))
+        ok3 = run_fr(d3, s3, passes, os.path.join(work, 'r2_stage3.log'))
+        print('stage 3 (leftovers):', 'ok' if ok3 else 'FAILED')
+        if ok3: final = D.import_ses(p, s3, fr)
+    p.shape.extend(shapes + final)
     out = os.path.join(work, 'PCB_R2_routed_nopour.json')
     p.save(out)
     json.dump({'fanout_missing': missing}, open(os.path.join(work, 'route_meta.json'), 'w'))
