@@ -170,6 +170,10 @@ def main():
         'Default': {'trackWidth': mm(0.15), 'clearance': mm(0.15), 'viaHoleDiameter': mm(0.6), 'viaHoleD': mm(0.3)},
         'isRealtime': True, 'isDrcOnRoutingOrPlaceVia': False, 'checkObjectToCopperarea': True, 'showDRCRangeLine': True,
     }
+    # 2-layer stack-up: the original file had Inner1/Inner2 switched on (JLCPCB then sees 4 layers)
+    p.doc['layers'] = [('%s~%s~%s~false~false~false~~' % tuple(l.split('~')[:3])) if l.split('~')[0] in ('21', '22') else l
+                       for l in p.doc['layers']]
+    if 'routerRule' in p.doc: p.doc['routerRule']['routerLayers'] = [1, 2]
     # BOM: JLCPCB Basic / in-stock equivalents (attributes only)
     import bom_r2
     bom_r2.patch_shapes(p.shape, bom_r2.ref_of_pcb)

@@ -1348,8 +1348,8 @@
   "14~BottomAssembly~#5555FF~false~false~false~",
   "15~Mechanical~#F022F0~false~false~false~",
   "19~3DModel~#66CCFF~false~false~false~",
-  "21~Inner1~#999966~true~false~true~0~Signal",
-  "22~Inner2~#008000~true~false~true~0~Signal",
+  "21~Inner1~#999966~false~false~false~~",
+  "22~Inner2~#008000~false~false~false~~",
   "23~Inner3~#00FF00~false~false~false~~",
   "24~Inner4~#BC8E00~false~false~false~~",
   "25~Inner5~#70DBFA~false~false~false~~",
@@ -1435,9 +1435,7 @@
   "viaDiameter": 0.61,
   "routerLayers": [
    1,
-   2,
-   21,
-   22
+   2
   ],
   "smdClearance": 0.152,
   "specialNets": [
