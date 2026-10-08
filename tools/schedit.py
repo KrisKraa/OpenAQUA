@@ -100,9 +100,11 @@ class Xf:
         return s.c[0] + dx + s.d[0], s.c[1] + dy + s.d[1]
 
     def rot(s, r):
+        # EasyEDA rotation fields count counter-clockwise on screen (pin rot 0 = points
+        # right, 90 = points up); this transform turns clockwise, hence the minus
         r = float(r or 0)
         if s.mirror: r = (180 - r) % 360
-        return (r + s.deg) % 360
+        return (r - s.deg) % 360
 
     def pts(s, txt):
         n = [float(v) for v in txt.split()]
@@ -175,7 +177,7 @@ def xform_sub(sub, xf):
 
 
 def fresh_ids(raw):
-    return re.sub(r'(?<=~)gge[0-9A-Za-z]+(?=~|$|\^)', lambda m: new_gid(), raw)
+    return re.sub(r'(?<=~)(?:gge|rep)[0-9A-Za-z]+(?=~|$|\^)', lambda m: new_gid(), raw)
 
 
 # ------------------------------------------------------------------ part wrapper
@@ -224,10 +226,16 @@ class Lib:
             g = p.split('^^')
             num = g[0].split('~')[3]
             x, y = (R2(v) for v in g[1].split('~')[:2])
-            m = re.match(r'M\s*(-?[\d.]+)\s+(-?[\d.]+)\s*([hv])\s*(-?[\d.]+)', g[2].split('~')[0])
-            hv, d = m.group(3), float(m.group(4))
-            if hv == 'h': od = 'left' if d > 0 else 'right'
-            else: od = 'up' if d > 0 else 'down'
+            m = re.match(r'M\s*(-?[\d.]+)[\s,]+(-?[\d.]+)\s*([hv])\s*(-?[\d.]+)', g[2].split('~')[0])
+            sx, sy, hv, d = float(m.group(1)), float(m.group(2)), m.group(3), float(m.group(4))
+            ex, ey = (sx + d, sy) if hv == 'h' else (sx, sy + d)
+            # one end of the pin line is the connection point, the other touches the body
+            if abs(sx - x) + abs(sy - y) < abs(ex - x) + abs(ey - y):
+                bx, by = ex, ey
+            else:
+                bx, by = sx, sy
+            vx, vy = x - bx, y - by
+            od = ('right' if vx > 0 else 'left') if abs(vx) > abs(vy) else ('down' if vy > 0 else 'up')
             out[num] = (x, y, od)
         return out
 
@@ -240,7 +248,7 @@ class Lib:
     def xy(s):
         return float(s.head[1]), float(s.head[2])
 
-    def rects(s):
+    def rects(s, texts=True):
         """obstacle rectangles of the drawn symbol (graphics, pins, visible texts)."""
         out = []
         for p in s.parts[1:]:
@@ -259,20 +267,20 @@ class Lib:
                 x, y, rx, ry = (float(v) for v in f[1:5])
                 out.append((x - rx, y - ry, x + rx, y + ry))
             elif t == 'T':
-                if f[12].strip() and (len(f) < 14 or f[13] != '0'):
+                if texts and f[12].strip() and (len(f) < 14 or f[13] != '0'):
                     x, y = float(f[2]), float(f[3]); w = PART_CW * len(f[12])
                     rot = float(f[4] or 0)
                     if rot in (90, 270): out.append((x - 8, y - w, x + 1, y + 1))
                     else: out.append((x - 1, y - 8, x + w, y + 1))
             elif t == 'P':
                 g = p.split('^^')
-                m = re.match(r'M\s*(-?[\d.]+)\s+(-?[\d.]+)\s*([hv])\s*(-?[\d.]+)', g[2].split('~')[0])
+                m = re.match(r'M\s*(-?[\d.]+)[\s,]+(-?[\d.]+)\s*([hv])\s*(-?[\d.]+)', g[2].split('~')[0])
                 x0, y0 = float(m.group(1)), float(m.group(2)); d = float(m.group(4))
                 x1, y1 = (x0 + d, y0) if m.group(3) == 'h' else (x0, y0 + d)
                 out.append((min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)))
                 for k in (3, 4):
                     q = g[k].split('~')
-                    if q[0] == '1' and q[4].strip():
+                    if texts and q[0] == '1' and q[4].strip():
                         x, y = float(q[1]), float(q[2]); w = 4 * len(q[4])
                         if q[5] == 'end': out.append((x - w, y - 6, x, y + 1))
                         else: out.append((x, y - 6, x + w, y + 1))
@@ -287,7 +295,7 @@ def make_flag(name, x, y, outward):
     w = FLAG_CW * len(name)
     if is_gnd(name):
         rot = GND_ROT[outward]
-        xf = Xf(deg=rot)
+        xf = Xf(deg=(360 - rot) % 360)   # EasyEDA rotates counter-clockwise on screen
         base = [((0, 10), (0, 0)), ((-9, 10), (9, 10)), ((-6, 12), (6, 12)), ((-3, 14), (3, 14)), ((-1, 16), (1, 16))]
         tx, ty = {0: (x - 13, y + 26), 180: (x - 13, y - 19), 90: (x + 16.5, y + 4), 270: (x - 42.8, y + 4)}[rot]
         kind = 'part_netLabel_gnD'
@@ -332,10 +340,14 @@ def flag_rects(raw):
         f = s.split('~')
         if f[0] == 'PL':
             n = [float(v) for v in f[1].split()]
-            out.append((min(n[0::2]), min(n[1::2]), max(n[0::2]), max(n[1::2])))
+            x0, y0, x1, y1 = min(n[0::2]), min(n[1::2]), max(n[0::2]), max(n[1::2])
+            # bars: shrink along their length so flags on a 10-unit pitch don't collide
+            if x1 - x0 > y1 - y0: x0, x1 = x0 + 1.5, x1 - 1.5
+            elif y1 - y0 > x1 - x0: y0, y1 = y0 + 1.5, y1 - 1.5
+            out.append((x0, y0, x1, y1))
     nm = g[2].split('~')
     tx, ty = float(nm[2]), float(nm[3])
-    out.append((tx, ty - 9, tx + FLAG_CW * len(nm[0]), ty + 1))
+    out.append((tx, ty - 8, tx + FLAG_CW * len(nm[0]), ty))
     return out
 
 
@@ -378,6 +390,7 @@ class Sheet:
                 s.items.append(['LIB', Lib(x)])
             else:
                 s.items.append([t, x])
+        s._orig_j = {(R2(x.split('~')[1]), R2(x.split('~')[2])) for x in sh if x.startswith('J~')}
 
     # ---------------- accessors
     def wires(s):
@@ -597,8 +610,10 @@ class Sheet:
                 if on_seg(q, a, b): return False
         return True
 
-    def flag_candidate_ok(s, name, path, outward, obst, segs, pinpts, flagpts, extra=()):
-        if not s.stub_ok(path, None, segs, pinpts, flagpts): return False
+    def flag_candidate_ok(s, name, path, outward, obst, segs, pinpts, flagpts, extra=(), why=None):
+        if not s.stub_ok(path, None, segs, pinpts, flagpts):
+            if why is not None: why.append('electrical')
+            return False
         end = path[-1]
         raw = make_flag(name, end[0], end[1], outward)
         frs = flag_rects(raw)
@@ -606,7 +621,9 @@ class Sheet:
         for r in frs:
             if r[0] < bx0 or r[2] > bx1 or r[1] < by0 or r[3] > by1: return False
             for o in list(obst) + list(extra):
-                if rect_hit(r, o, 1.0): return False
+                if rect_hit(r, o, 1.0):
+                    if why is not None: why.append(('flag hits', r, o))
+                    return False
         # stub body must not run through drawn graphics (other than wires, handled above)
         for a, b in zip(path, path[1:]):
             if a == b: continue
@@ -616,10 +633,12 @@ class Sheet:
             sr2 = (sr[0] + (1.5 if dx > 0 else 0), sr[1] + (1.5 if dy > 0 else 0),
                    sr[2] - (1.5 if dx < 0 else 0), sr[3] - (1.5 if dy < 0 else 0))
             for o in s.part_obst:
-                if rect_hit(sr2, o, 0.2): return False
+                if rect_hit(sr2, o, 0.2):
+                    if why is not None: why.append(('stub hits', sr2, o))
+                    return False
         return True
 
-    def candidates_from(s, p, outward, Ls=(10, 20, 30, 40, 50, 60, 80, 100), turns=True):
+    def candidates_from(s, p, outward, Ls=(10, 20, 30, 40, 50, 60, 80, 100, 120, 140), turns=True):
         dx, dy = DIRV[outward]
         for L in Ls:
             q = (R2(p[0] + dx * L), R2(p[1] + dy * L))
@@ -631,17 +650,18 @@ class Sheet:
                     sx, sy = DIRV[side]
                     if (sx, sy) in ((dx, dy), (-dx, -dy)): continue
                     yield [p, q], side, L + 5           # flag turns at the corner
-                    for L2 in (10, 20, 30):
+                    for L2 in (10, 20, 30, 40):
                         r = (R2(q[0] + sx * L2), R2(q[1] + sy * L2))
                         yield [p, q, r], side, L + L2 + 8
+                        yield [p, q, r], outward, L + L2 + 10   # jog, then flag parallel to the first leg
 
     def prepare_obstacles(s, skip_flags=()):
         s.part_obst = []
         for i, l in s.libs():
             if l.ref == 'A': continue
-            s.part_obst += l.rects()
+            s.part_obst += l.rects(texts=False)
         for i, raw in s.flags():
-            s.part_obst += flag_rects(raw)
+            s.part_obst += flag_rects(raw)          # stubs may cross part texts, not flag names
         return s.obstacles(skip_flags)
 
     def auto_flag(s, name, start_pts, extra_obst=(), prefer=None):
@@ -666,7 +686,7 @@ class Sheet:
         return path, outward
 
     # ---------------- junction dots
-    def fix_junctions(s):
+    def fix_junctions(s, keep_existing=False):
         edges, adj, pins, flags = s.graph()
         # degree from original (unsplit) geometry: count wire ends + 2*interior passes + pins
         segs = []
@@ -674,12 +694,14 @@ class Sheet:
         deg = collections.Counter()
         cand = set(adj) | set(pins)
         for p in cand:
-            d = len(pins.get(p, []))
+            d = len(pins.get(p, [])) + len(flags.get(p, []))
             for a, b in segs:
                 if p == a or p == b: d += 1
                 elif on_seg(p, a, b): d += 2
             deg[p] = d
         need = {p for p, d in deg.items() if d >= 3 and adj.get(p)}
+        if keep_existing:
+            need |= set(e for e in s._orig_j if e in adj)
         have = {}
         for i, (k, o) in enumerate(s.items):
             if k == 'J' and o is not None:
