@@ -49,8 +49,23 @@ def move_text(p, text, x, y):
     return False
 
 
+# Hand-finished links the autorouter left open (checked by verify_pcb afterwards)
+POST = [
+    # Q1 drain (via at 13.8,15.2) -> trunk at C50, bottom layer clear of the +5 V sense run
+    ('+20V_BUS', '2', 0.5, [(13.8, 15.2), (16.2, 17.6), (16.2, 20.6), (16.9, 21.3), (21.5, 21.3)]),
+    ('+20V_BUS', '1', 0.5, [(21.5, 21.3), (22.91, 21.3)]),
+    # +5 V main (via 39.6,19.45) -> the R24 / CAN-VCC branch (router's via at 36.21,25.68)
+    ('+5V_MAIN', '2', 0.5, [(39.6, 19.45), (39.6, 22.0), (36.21, 25.39), (36.21, 25.68)]),
+]
+POST_VIAS = [('+20V_BUS', 21.5, 21.3)]
+
+
 def main():
     p = Pcb(SRC)
+    for net, lay, w, pts in POST:
+        p.shape.append(RR.track(net, lay, w, pts))
+    for net, x, y in POST_VIAS:
+        p.shape.append(RR.via(net, x, y))
     tmpl = next(s for s in p.shape if s.startswith('COPPERAREA'))
     p.doc['shape'] = [s for s in p.shape if not s.startswith('COPPERAREA')]
     # board polygon (mm)
@@ -72,14 +87,26 @@ def main():
     p.save(tmp)
     rep, shorts, viol, (layers, R2, nets) = V.verify(tmp)
     g = nets.index('GND') + 1
-    both = (layers['1'] == g) & (layers['2'] == g)
-    r = int(math.ceil((RR.VIA_D / 2 + 0.35) / V.RES))
+    # where a via may go: bottom plane present, and on top nothing but (potential) GND pour,
+    # so isolated top islands get tied down instead of being removed
+    def free(L):
+        other = (layers[L] > 0) & (layers[L] != g)
+        cl = int(math.ceil(0.3 / V.RES)); s2 = np.zeros((2 * cl + 1, 2 * cl + 1), bool)
+        yy2, xx2 = np.mgrid[-cl:cl + 1, -cl:cl + 1]; s2[xx2 * xx2 + yy2 * yy2 <= cl * cl] = True
+        e = int(math.ceil(0.6 / V.RES))
+        inner = ndimage.binary_erosion(R2.board, structure=np.ones((2 * e + 1, 2 * e + 1), bool))
+        return ~ndimage.binary_dilation(other, structure=s2) & inner
+    ant_m = np.zeros_like(R2.board)
+    a0, b0, a1, b1 = RR.ANTENNA
+    ant_m[:int(b1 / V.RES) + 12, int(a0 / V.RES) - 12:int(a1 / V.RES) + 12] = True
+    both = (layers['2'] == g) & free('1') & free('2') & ~ant_m
+    r = int(math.ceil((RR.VIA_D / 2 + 0.05) / V.RES))
     st = np.zeros((2 * r + 1, 2 * r + 1), bool); yy, xx = np.mgrid[-r:r + 1, -r:r + 1]; st[xx * xx + yy * yy <= r * r] = True
     safe = ndimage.binary_erosion(both, structure=st)
     added = 0
     vias = []
-    for y in np.arange(2.5, 66, 3.0):
-        for x in np.arange(2.5, 153, 3.0):
+    for y in np.arange(2.5, 66, 5.0):
+        for x in np.arange(2.5, 153, 5.0):
             # search a small neighbourhood for a safe spot
             best = None
             for dy in (0, -0.6, 0.6, -1.2, 1.2):
@@ -87,7 +114,7 @@ def main():
                     cx, cy = x + dx, y + dy
                     i, j = int(cy / V.RES), int(cx / V.RES)
                     if 0 <= i < safe.shape[0] and 0 <= j < safe.shape[1] and safe[i, j]:
-                        if all(math.hypot(cx - a, cy - b) > 2.0 for a, b in vias):
+                        if all(math.hypot(cx - a, cy - b) > 3.5 for a, b in vias):
                             best = (cx, cy); break
                 if best: break
             if best:

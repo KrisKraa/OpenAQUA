@@ -54,6 +54,40 @@ HAND = [
     ('GND', '1', 0.6, [(24.59, 10.52), (24.59, 11.9), (25.2, 12.75)]),
     ('GND', '1', 0.8, [(25.2, 12.75), (24.31, 13.6), (24.31, 15.1)]),
     ('BUCK_FREQ', '1', 0.15, [(25.86, 10.52), (25.86, 11.4), (25.9, 11.8), (25.9, 17.45)]),  # squeezes between C26 pads
+    # +20V trunk to the module ports: corridor between the ESP32 and the analog zone
+    # (the autorouter otherwise drags it through the pH/TDS area)
+    ('+20V_BUS', '1', 0.8, [(22.91, 21.0), (22.91, 37.6), (23.8, 38.5), (116.1, 38.5), (117.0, 37.6),
+                             (117.0, 14.6), (119.6, 12.0), (127.15, 12.0)]),
+    ('+20V_BUS', '1', 0.8, [(124.5, 12.0), (124.5, 13.59)]),
+    # buck input caps -> trunk (around R39 / C50's GND pad)
+    ('+20V_BUS', '1', 0.6, [(27.49, 15.1), (28.9, 16.5), (28.9, 22.0), (28.3, 22.6), (22.91, 22.6)]),
+    ('+20V_BUS', '1', 0.8, [(116.1, 38.5), (117.0, 39.4), (117.0, 57.6), (118.4, 59.0), (120.15, 59.0)]),
+    ('+20V_BUS', '1', 0.4, [(36.85, 22.5), (36.85, 21.1), (28.9, 21.1)]),     # R25 (LED1) feed
+    # ---- everything inside the buck zone is hand-routed; the zone is fenced off for the router
+    ('U13_4', '1', 0.25, [(24.59, 4.25), (19.8, 4.25)]),                       # FB -> R9/R10 (short)
+    ('BUCK_COMP', '1', 0.25, [(25.86, 4.48), (25.86, 2.5), (24.96, 1.6), (22.75, 1.6)]),
+    ('BUCK_COMP_RC', '1', 0.25, [(21.25, 1.6), (19.3, 1.6)]),
+    ('BUCK_EN', '1', 0.25, [(27.13, 4.48), (27.13, 3.0), (27.73, 2.4), (29.15, 2.4), (29.15, 1.4)]),
+    # R38 (EN pull-up) gets +20 V from Q1 along the top edge on the bottom layer
+    ('+20V_BUS', '1', 0.3, [(27.65, 1.4), (26.7, 1.45)]),
+    ('+20V_BUS', '2', 0.3, [(26.7, 1.45), (26.0, 0.75), (13.8, 0.75), (13.8, 15.2)]),
+    ('+20V_BUS', '1', 0.4, [(13.8, 15.2), (15.0, 15.2)]),
+    # +5 V output: L2 -> C29 / C30 / C35 -> AMS1117 VIN
+    ('+5V_MAIN', '1', 0.8, [(42.0, 13.68), (42.0, 19.75), (47.5, 19.75), (47.43, 21.0), (47.43, 22.1)]),
+    ('+5V_MAIN', '1', 0.6, [(42.0, 17.8), (40.41, 17.8)]),
+    ('+5V_MAIN', '1', 0.4, [(45.6, 18.7), (45.6, 19.75)]),
+    # +5 V sense to the FB divider: bottom layer around (not under) the switching loop
+    ('+5V_MAIN', '1', 0.3, [(40.41, 17.8), (39.6, 19.45)]),
+    ('+5V_MAIN', '2', 0.3, [(39.6, 19.45), (22.3, 19.45), (22.3, 7.2), (22.4, 6.9)]),
+    ('+5V_MAIN', '1', 0.3, [(22.4, 6.9), (21.6, 5.75)]),
+    # USB 2.0 from the USB-C receptacle (interleaved pins): D+ A6/B6 joined by two vias
+    # under the connector body, D- B7/A7 joined right at the pads, both straight into U16
+    ('USB_D+', '1', 0.25, [(5.82, 27.15), (5.25, 27.15)]),
+    ('USB_D+', '1', 0.25, [(5.82, 28.15), (5.25, 28.15)]),
+    ('USB_D+', '2', 0.25, [(5.25, 27.15), (5.25, 28.15)]),
+    ('USB_D+', '1', 0.25, [(7.12, 28.15), (11.55, 28.15), (11.55, 30.5)]),
+    ('USB_D-', '1', 0.25, [(7.12, 26.65), (7.8, 26.65), (7.8, 27.65)]),
+    ('USB_D-', '1', 0.25, [(7.12, 27.65), (13.45, 27.65), (13.45, 30.5)]),
     # pH: INP straight from the U.FL centre pin, guard traces either side
     ('PH_INP', '1', 0.25, [(23.92, 55.67), (24.6, 55.83), (28.13, 55.83)]),
     ('PH_GUARD', '1', 0.25, [(28.13, 55.18), (25.3, 55.18)]),
@@ -63,7 +97,11 @@ HAND = [
     ('GND', '1', 0.25, [(45.2, 52.1), (45.2, 53.2), (45.7, 53.7)]),   # U4.1
     ('GND', '1', 0.25, [(46.2, 52.1), (46.2, 53.2), (45.7, 53.7)]),   # U4.3
 ]
-HAND_VIAS = [('PH_GUARD', 25.3, 55.18), ('PH_GUARD', 25.3, 56.48), ('GND', 45.7, 54.15)]
+HAND_VIAS = [('PH_GUARD', 25.3, 55.18), ('PH_GUARD', 25.3, 56.48), ('GND', 45.7, 54.15),
+             ('USB_D+', 5.25, 27.15, 0.5, 0.25), ('USB_D+', 5.25, 28.15, 0.5, 0.25),
+             ('+20V_BUS', 26.7, 1.45), ('+20V_BUS', 13.8, 15.2), ('+5V_MAIN', 39.6, 19.45), ('+5V_MAIN', 22.4, 6.9)]
+# buck zone fenced off for the autorouter (both layers); its nets are all in HAND
+BUCK_ZONE = [(17.2, 0.0, 49.0, 12.0), (23.4, 12.0, 49.0, 20.4)]
 # bottom-layer guard patch under the pH input (net PH_GUARD), GND plane clears it
 GUARD_PATCH = [(22.4, 54.55), (29.0, 54.55), (29.0, 57.05), (22.4, 57.05)]
 
@@ -71,9 +109,10 @@ ANTENNA = (57.0, 0.0, 83.0, 7.5)
 HOLES = [(5, 5), (149, 5), (15, 55), (139, 63)]
 
 CLASSES = {
-    'pwr20': (['+20V_BUS', 'USB_VBUS_RAW', 'P1_VFUSED', 'P1_VBUS', 'P2_VFUSED', 'P2_VBUS'], 0.6, 0.25),
-    'pwr5': (['+5V_MAIN'], 0.6, 0.2),
-    'pwr3': (['+3V3'], 0.4, 0.2),
+    'pwr20': (['+20V_BUS', 'P1_VFUSED', 'P2_VFUSED'], 0.6, 0.25),
+    'vbus': (['USB_VBUS_RAW', 'P1_VBUS', 'P2_VBUS'], 0.45, 0.2),   # must reach 0.6 mm USB-C pads
+    'pwr5': (['+5V_MAIN'], 0.5, 0.2),
+    'pwr3': (['+3V3'], 0.3, 0.2),
     'usb': (['USB_D+', 'USB_D-', 'U15_13', 'U15_14'], 0.3, 0.2),
 }
 
@@ -110,7 +149,7 @@ def on_board(x, y, m=0.6):
 
 def gnd_fanout(p, pads, hand_segs, hand_vias):
     """Return list of (pad, via_xy, [track pts]) for every SMD GND pad."""
-    vias = [(x, y) for _, x, y in hand_vias]
+    vias = [(v[1], v[2]) for v in hand_vias]
     res = []
     other = [q for q in pads if q['net'] != 'GND']
     def ok(x, y, pad):
@@ -143,7 +182,7 @@ def gnd_fanout(p, pads, hand_segs, hand_vias):
     for pad in pads:
         if pad['net'] != 'GND' or pad['layer'] != '1': continue
         big = pad['w'] * pad['h'] > 4.0
-        if pad['ref'] in ('U15',) or (pad['ref'] in ('U13', 'U1') and pad['num'] in ('9', '25')):
+        if (pad['ref'] == 'U15' and pad['num'] == '41') or (pad['ref'] in ('U13', 'U1') and pad['num'] in ('9', '25')):
             # via-in-pad for exposed / thermal pads
             cand = [(pad['x'], pad['y'])] if pad['ref'] == 'U15' else \
                    [(pad['x'] + dx, pad['y'] + dy) for dx in (-0.7, 0.7) for dy in (-0.45, 0.45)] if pad['ref'] == 'U13' else \
@@ -221,7 +260,7 @@ def write_dsn(p, path, wiring, obstacles, b_cu=True, b_cost=(4.0, 6.0)):
     pins, stacks = obstacle_image(None, obstacles)
     t = t.replace(' (placement\n', ' (placement\n  (component "IMG_OBS" (place "OBS1" 0 0 front 0))\n', 1)
     t = t.replace(' (library\n', ' (library\n  (image "IMG_OBS"\n' + '\n'.join(pins) + '\n  )\n' + '\n'.join(stacks) + '\n', 1)
-    ar = ('  (autoroute_settings (fanout off) (autoroute on) (postroute on) (vias on) (via_costs 60) '
+    ar = ('  (autoroute_settings (fanout off) (autoroute on) (postroute on) (vias on) (via_costs 25) '
           '(plane_via_costs 5) (start_ripup_costs 100) (start_pass_no 1) '
           '(layer_rule F.Cu (active on) (preferred_direction horizontal) (preferred_direction_trace_costs 1.0) (against_preferred_direction_trace_costs 1.3)) '
           '(layer_rule B.Cu (active %s) (preferred_direction vertical) (preferred_direction_trace_costs %.1f) (against_preferred_direction_trace_costs %.1f)))\n'
@@ -266,19 +305,28 @@ def main(passes=40):
 
     # DSN: hand routes as protected wiring (except GND), GND copper + keep-outs as obstacles
     wiring = [(net, 'F.Cu' if lay == '1' else 'B.Cu', w, [E(x, y) for x, y in pts]) for net, lay, w, pts in HAND if net != 'GND']
-    D.export_dsn.vias = [(net, *E(x, y)) for net, x, y in HAND_VIAS if net != 'GND']
+    D.export_dsn.vias = [(v[0], *E(v[1], v[2])) for v in HAND_VIAS if v[0] != 'GND']
     obstacles = [('rect', ['F.Cu', 'B.Cu'], ANTENNA)]
+    obstacles += [('rect', ['F.Cu', 'B.Cu'], z) for z in BUCK_ZONE]
     obstacles += [('circle', ['F.Cu', 'B.Cu'], (hx, hy, 3.3 + 0.8)) for hx, hy in HOLES]
+    # 0.4 mm copper-free strip along the board edge (Freerouting ignores edge clearance)
+    edge = [((x - X0) * U, (y - Y0) * U) for x, y in D.outline_pts(p)]
+    for a, b in zip(edge, edge[1:] + edge[:1]):
+        obstacles.append(('path', ['F.Cu', 'B.Cu'], (0.8, [a, b])))
     obstacles += [('rect', ['B.Cu'], (GUARD_PATCH[0][0], GUARD_PATCH[0][1], GUARD_PATCH[2][0], GUARD_PATCH[2][1]))]
     for net, lay, w, pts in HAND:
         if net == 'GND': obstacles.append(('path', ['F.Cu'], (w, pts)))
-    obstacles += [('circle', ['F.Cu', 'B.Cu'], (x, y, VIA_D)) for net, x, y in HAND_VIAS if net == 'GND']
+    obstacles += [('circle', ['F.Cu', 'B.Cu'], (v[1], v[2], VIA_D)) for v in HAND_VIAS if v[0] == 'GND']
     for pad, v, tr in fan:
         if v is None: continue
         obstacles.append(('circle', ['F.Cu', 'B.Cu'], (v[0], v[1], VIA_D)))
         if tr: obstacles.append(('path', ['F.Cu'], (0.4, tr)))
 
     work = OUT_DIR
+    if DRY:
+        p.shape.extend(shapes)
+        p.save(os.path.join(work, 'PCB_R2_handonly.json'))
+        print('dry run: wrote hand-routed copper only'); return
     d1, s1 = os.path.join(work, 'r2_stage1.dsn'), os.path.join(work, 'r2_stage1.ses')
     write_dsn(p, d1, wiring, obstacles, b_cu=False)
     ok = run_fr(d1, s1, passes, os.path.join(work, 'r2_stage1.log'))
@@ -309,6 +357,8 @@ def main(passes=40):
     json.dump({'fanout_missing': missing}, open(os.path.join(work, 'route_meta.json'), 'w'))
     print('wrote', out)
 
+
+DRY = '--dry' in sys.argv
 
 if __name__ == '__main__':
     n = 40
