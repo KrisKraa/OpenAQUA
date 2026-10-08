@@ -20,7 +20,7 @@ PARTS = {
     'C22962': ('UNI-ROYAL', '0603WAF2200T5E', 'Basic Part'),         # 220R
     'C23162': ('UNI-ROYAL', '0603WAF4701T5E', 'Basic Part'),         # 4.7k
     'C21190': ('UNI-ROYAL', '0603WAF1001T5E', 'Basic Part'),         # 1k
-    'C72043': ('Everlight', '19-217/GHC-YR1S2/3T', 'Extended Part'),  # green 0603, pin1 = cathode
+    'C2289': ('XINGLIGHT', 'XL-0603QYGC', 'Extended Part'),          # green 0603, pin1 = cathode (K)
     'C2286': ('Hubei KENTO', 'KT-0603R', 'Basic Part'),              # red 0603, pin1 = anode
     'C88374': ('HRS(Hirose)', 'U.FL-R-SMT-1(80)', 'Extended Part'),  # same land pattern as U.FL-R-SMT(10)
     'C15051': ('MPS', 'MP1584EN-LF-Z', 'Extended Part'),             # same chip, stocked listing
@@ -44,7 +44,7 @@ _set('R6 R7 R12 R13', 'C23345')
 _set('R14 R15 R23 R36', 'C22962')
 _set('R16 R17 R21', 'C23162')
 _set('R18 R19 R24 R26 R27 R28 R29', 'C21190')
-_set('LED1 LED2 LED3 LED4', 'C72043')
+_set('LED1 LED2 LED3 LED4', 'C2289')    # C72043 ran out at JLCPCB
 _set('LED5 LED6', 'C2286')
 _set('RF1', 'C88374')
 _set('U13', 'C15051')
