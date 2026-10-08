@@ -133,6 +133,19 @@ def main():
         if s.startswith('TEXT') and '~OpenAQUA_R1~' in s:
             f = s.split('~'); f[10] = 'OpenAQUA_R2'; f[11] = ''
             p.shape[i] = '~'.join(f)
+    # manufacturing normalisation: JLCPCB 2-layer limits (min track 0.127 mm, standard via 0.6/0.3)
+    for i, s in enumerate(p.shape):
+        f = s.split('~')
+        if f[0] == 'TRACK' and f[2] in ('1', '2') and float(f[1]) * U < 0.15:
+            f[1] = _fmt(0.15 / U); p.shape[i] = '~'.join(f)
+        elif f[0] == 'VIA' and float(f[3]) * U < 0.6:
+            f[3] = _fmt(0.6 / U); f[5] = _fmt(0.15 / U); p.shape[i] = '~'.join(f)
+    # design rules matching how the board was routed (replaces the original 24v/GND sets)
+    mm = lambda v: round(v / U, 4)
+    p.doc['DRCRULE'] = {
+        'Default': {'trackWidth': mm(0.15), 'clearance': mm(0.15), 'viaHoleDiameter': mm(0.6), 'viaHoleD': mm(0.3)},
+        'isRealtime': True, 'isDrcOnRoutingOrPlaceVia': False, 'checkObjectToCopperarea': True, 'showDRCRangeLine': True,
+    }
     p.save(DST)
     print('stitching vias:', added, '->', DST)
 
