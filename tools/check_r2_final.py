@@ -38,7 +38,14 @@ def main(path):
         sl, m = V.draw(R, kind, g)
         if (m & ~inner[sl]).any(): edge_hits.append((ref, net))
         if ref.split('.')[0] != 'U15' and (m & ant[sl]).any(): ant_hits.append((ref, net))
-    ok = not rep and not shorts and not viol and not edge_hits and not ant_hits
+    import exact_drc, hole_check, math
+    exact = exact_drc.check(path, 0.15)
+    H = hole_check.holes(p)
+    close = [(a[3], b[3]) for i, a in enumerate(H) for b in H[i + 1:]
+             if math.hypot(a[0] - b[0], a[1] - b[1]) - a[2] - b[2] < 0.25 and (a[3].startswith('via') or a[3].split('.')[0] != b[3].split('.')[0])]
+    print('exact clearance < 0.15:', len(exact), exact[:5])
+    print('hole-to-hole < 0.25   :', len(close), close[:5])
+    ok = not rep and not shorts and not viol and not edge_hits and not ant_hits and not exact and not close
     print('unconnected nets      :', len(rep), list(rep)[:10])
     print('shorts                :', len(shorts))
     print('clearance < 0.20 mm   :', len(viol))

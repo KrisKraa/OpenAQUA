@@ -104,6 +104,18 @@ def main():
     st = np.zeros((2 * r + 1, 2 * r + 1), bool); yy, xx = np.mgrid[-r:r + 1, -r:r + 1]; st[xx * xx + yy * yy <= r * r] = True
     safe = ndimage.binary_erosion(both, structure=st)
     added = 0
+    # existing drill holes (vias, through-hole pads, mounting holes): keep >= 0.3 mm hole-to-hole
+    holes = []
+    for s in p.shape:
+        f = s.split('~')
+        if f[0] == 'VIA': holes.append(((float(f[1]) - X0) * U, (float(f[2]) - Y0) * U, float(f[5]) * U))
+        elif f[0] == 'HOLE': holes.append(((float(f[1]) - X0) * U, (float(f[2]) - Y0) * U, float(f[3]) * U))
+    for _, l in p.libs():
+        for _, f in l.pads():
+            if float(f[9] or 0) > 0:
+                holes.append(((float(f[2]) - X0) * U, (float(f[3]) - Y0) * U, float(f[9]) * U + (float(f[13] or 0) * U / 2)))
+    def hole_ok(x, y):
+        return all(math.hypot(x - hx, y - hy) >= hr + RR.VIA_HOLE / 2 + 0.3 for hx, hy, hr in holes)
     vias = []
     for y in np.arange(2.5, 66, 5.0):
         for x in np.arange(2.5, 153, 5.0):
@@ -114,7 +126,7 @@ def main():
                     cx, cy = x + dx, y + dy
                     i, j = int(cy / V.RES), int(cx / V.RES)
                     if 0 <= i < safe.shape[0] and 0 <= j < safe.shape[1] and safe[i, j]:
-                        if all(math.hypot(cx - a, cy - b) > 3.5 for a, b in vias):
+                        if all(math.hypot(cx - a, cy - b) > 3.5 for a, b in vias) and hole_ok(cx, cy):
                             best = (cx, cy); break
                 if best: break
             if best:
