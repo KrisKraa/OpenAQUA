@@ -170,6 +170,9 @@ def main():
         'Default': {'trackWidth': mm(0.15), 'clearance': mm(0.15), 'viaHoleDiameter': mm(0.6), 'viaHoleD': mm(0.3)},
         'isRealtime': True, 'isDrcOnRoutingOrPlaceVia': False, 'checkObjectToCopperarea': True, 'showDRCRangeLine': True,
     }
+    # BOM: JLCPCB Basic / in-stock equivalents (attributes only)
+    import bom_r2
+    bom_r2.patch_shapes(p.shape, bom_r2.ref_of_pcb)
     # every footprint header needs field 7 = '1' for EasyEDA to load it fully
     for i, s in enumerate(p.shape):
         if s.startswith('LIB~'):
