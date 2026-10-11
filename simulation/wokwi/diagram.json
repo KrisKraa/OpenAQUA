@@ -1,0 +1,513 @@
+{
+  "version": 1,
+  "author": "OpenAQUA",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s3-devkitc-1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "lcd1",
+      "top": -260,
+      "left": 190,
+      "attrs": {
+        "swapXY": ""
+      }
+    },
+    {
+      "type": "chip-ads1115",
+      "id": "adc1",
+      "top": 250,
+      "left": 250,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_ph",
+      "top": 360,
+      "left": 180,
+      "attrs": {
+        "label": "pH probe (AIN1)"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_vocm",
+      "top": 360,
+      "left": 280,
+      "attrs": {
+        "label": "pH VOCM ref (AIN3)"
+      }
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "pot_tds",
+      "top": 360,
+      "left": 380,
+      "attrs": {
+        "label": "TDS (AIN0)"
+      }
+    },
+    {
+      "type": "wokwi-ds18b20",
+      "id": "temp1",
+      "top": 190,
+      "left": -200,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r_temp",
+      "top": 150,
+      "left": -260,
+      "attrs": {
+        "value": "4700"
+      }
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_leak1",
+      "top": 290,
+      "left": -200,
+      "attrs": {
+        "label": "Leak 1"
+      }
+    },
+    {
+      "type": "wokwi-slide-switch",
+      "id": "sw_leak2",
+      "top": 290,
+      "left": -130,
+      "attrs": {
+        "label": "Leak 2"
+      }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 60,
+      "left": -230,
+      "attrs": {
+        "color": "white",
+        "label": "Front button"
+      }
+    },
+    {
+      "type": "wokwi-rgb-led",
+      "id": "rgb1",
+      "top": 0,
+      "left": -140,
+      "attrs": {
+        "common": "cathode"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led4",
+      "top": -60,
+      "left": -100,
+      "attrs": {
+        "color": "green",
+        "label": "LED4 status"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led5",
+      "top": -60,
+      "left": 330,
+      "attrs": {
+        "color": "red",
+        "label": "LED5 port1"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led6",
+      "top": -60,
+      "left": 380,
+      "attrs": {
+        "color": "red",
+        "label": "LED6 port2"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "vbus1",
+      "top": -60,
+      "left": 440,
+      "attrs": {
+        "color": "orange",
+        "label": "Port1 VBUS on"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "vbus2",
+      "top": -60,
+      "left": 490,
+      "attrs": {
+        "color": "orange",
+        "label": "Port2 VBUS on"
+      }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "cc_p1",
+      "top": 60,
+      "left": 400,
+      "attrs": {
+        "travelLength": "30",
+        "label": "Port1 CC1"
+      }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "cc_p2",
+      "top": 150,
+      "left": 400,
+      "attrs": {
+        "travelLength": "30",
+        "label": "Port2 CC1"
+      }
+    }
+  ],
+  "connections": [
+    [
+      "lcd1:VCC",
+      "esp:3V3.1",
+      "orange",
+      []
+    ],
+    [
+      "lcd1:GND",
+      "esp:GND.1",
+      "orange",
+      []
+    ],
+    [
+      "lcd1:SCK",
+      "esp:4",
+      "orange",
+      []
+    ],
+    [
+      "lcd1:MOSI",
+      "esp:5",
+      "orange",
+      []
+    ],
+    [
+      "lcd1:CS",
+      "esp:6",
+      "orange",
+      []
+    ],
+    [
+      "lcd1:D/C",
+      "esp:7",
+      "orange",
+      []
+    ],
+    [
+      "lcd1:RST",
+      "esp:15",
+      "orange",
+      []
+    ],
+    [
+      "lcd1:LED",
+      "esp:16",
+      "orange",
+      []
+    ],
+    [
+      "adc1:VDD",
+      "esp:3V3.1",
+      "blue",
+      []
+    ],
+    [
+      "adc1:GND",
+      "esp:GND.1",
+      "blue",
+      []
+    ],
+    [
+      "adc1:ADDR",
+      "esp:GND.1",
+      "blue",
+      []
+    ],
+    [
+      "adc1:SDA",
+      "esp:18",
+      "blue",
+      []
+    ],
+    [
+      "adc1:SCL",
+      "esp:8",
+      "blue",
+      []
+    ],
+    [
+      "adc1:AIN1",
+      "pot_ph:SIG",
+      "blue",
+      []
+    ],
+    [
+      "adc1:AIN3",
+      "pot_vocm:SIG",
+      "blue",
+      []
+    ],
+    [
+      "adc1:AIN0",
+      "pot_tds:SIG",
+      "blue",
+      []
+    ],
+    [
+      "pot_ph:VCC",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "pot_ph:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pot_vocm:VCC",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "pot_vocm:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "pot_tds:VCC",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "pot_tds:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "cc_p1:VCC",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "cc_p1:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "cc_p2:VCC",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "cc_p2:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "temp1:VCC",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "temp1:GND",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "temp1:DQ",
+      "esp:11",
+      "yellow",
+      []
+    ],
+    [
+      "r_temp:1",
+      "esp:11",
+      "yellow",
+      []
+    ],
+    [
+      "r_temp:2",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "sw_leak1:2",
+      "esp:12",
+      "purple",
+      []
+    ],
+    [
+      "sw_leak1:1",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "sw_leak2:2",
+      "esp:13",
+      "purple",
+      []
+    ],
+    [
+      "sw_leak2:1",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "btn1:1.l",
+      "esp:0",
+      "white",
+      []
+    ],
+    [
+      "btn1:2.l",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "rgb1:R",
+      "esp:38",
+      "red",
+      []
+    ],
+    [
+      "rgb1:G",
+      "esp:39",
+      "green",
+      []
+    ],
+    [
+      "rgb1:B",
+      "esp:40",
+      "blue",
+      []
+    ],
+    [
+      "rgb1:COM",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "led4:A",
+      "esp:17",
+      "green",
+      []
+    ],
+    [
+      "led4:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "led5:A",
+      "esp:41",
+      "green",
+      []
+    ],
+    [
+      "led5:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "led6:A",
+      "esp:21",
+      "green",
+      []
+    ],
+    [
+      "led6:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "vbus1:A",
+      "esp:42",
+      "green",
+      []
+    ],
+    [
+      "vbus1:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "vbus2:A",
+      "esp:14",
+      "green",
+      []
+    ],
+    [
+      "vbus2:C",
+      "esp:GND.1",
+      "black",
+      []
+    ],
+    [
+      "cc_p1:SIG",
+      "esp:1",
+      "gray",
+      []
+    ],
+    [
+      "esp:2",
+      "esp:3V3.1",
+      "red",
+      []
+    ],
+    [
+      "cc_p2:SIG",
+      "esp:9",
+      "gray",
+      []
+    ],
+    [
+      "esp:10",
+      "esp:3V3.1",
+      "red",
+      []
+    ]
+  ],
+  "dependencies": {}
+}

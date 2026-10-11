@@ -1,0 +1,6 @@
+{
+  "name": "ADS1115",
+  "author": "OpenAQUA",
+  "pins": ["ADDR", "ALRT", "GND", "AIN0", "AIN1", "AIN2", "AIN3", "VDD", "SDA", "SCL"],
+  "controls": []
+}
