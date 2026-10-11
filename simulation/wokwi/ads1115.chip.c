@@ -17,7 +17,9 @@ typedef struct {
 
 static const float FSR[8] = {6.144f, 4.096f, 2.048f, 1.024f, 0.512f, 0.256f, 0.256f, 0.256f};
 
-static float vin(chip_t *c, int i) { return pin_adc_read(c->ain[i]); }
+// Wokwi's analog values are a 0..1 ratio that pin_adc_read() reports on a 5 V scale; this
+// circuit runs at 3.3 V (a knob at the top reads 5.0 otherwise).
+static float vin(chip_t *c, int i) { return pin_adc_read(c->ain[i]) * (3.3f / 5.0f); }
 
 static void convert(chip_t *c) {
   int mux = (c->config >> 12) & 7, pga = (c->config >> 9) & 7;

@@ -371,7 +371,7 @@
       []
     ],
     [
-      "sw_leak1:1",
+      "sw_leak1:3",
       "esp:GND.1",
       "black",
       []
@@ -383,7 +383,7 @@
       []
     ],
     [
-      "sw_leak2:1",
+      "sw_leak2:3",
       "esp:GND.1",
       "black",
       []

@@ -75,9 +75,17 @@ Port ports[2] = {
 
 static bool inWin(int mv, int lo, int hi) { return mv >= lo && mv <= hi; }
 
+static int readCcMv(int pin) {
+#if SIMULATION
+  return analogRead(pin) * 3300L / 4095;  // Wokwi's ADC is linear 0-3.3 V, its mV calibration is not
+#else
+  return analogReadMilliVolts(pin);
+#endif
+}
+
 void updatePort(Port &p) {
-  p.mv1 = analogReadMilliVolts(p.cc1);
-  p.mv2 = analogReadMilliVolts(p.cc2);
+  p.mv1 = readCcMv(p.cc1);
+  p.mv2 = readCcMv(p.cc2);
   bool module = inWin(p.mv1, CC_MODULE_MIN, CC_MODULE_MAX) || inWin(p.mv2, CC_MODULE_MIN, CC_MODULE_MAX);
   bool sink = inWin(p.mv1, CC_SINK_MIN, CC_SINK_MAX) || inWin(p.mv2, CC_SINK_MIN, CC_SINK_MAX);
   uint32_t now = millis();
@@ -177,41 +185,42 @@ void drawStatic() {
   tft.setCursor(130, 12); tft.print(SIMULATION ? "R2 - simulation" : "R2");
 }
 
+// Text drawing in Adafruit_GFX is slow and blocks loop(), so only lines that changed are redrawn.
+void drawLine(int line, int y, uint8_t size, uint16_t color, const char *text) {
+  static char last[8][40];
+  static uint16_t lastColor[8];
+  if (lastColor[line] == color && strcmp(last[line], text) == 0) return;
+  strlcpy(last[line], text, sizeof last[line]);
+  lastColor[line] = color;
+  tft.setTextSize(size);
+  tft.setTextColor(color, ILI9341_BLACK);
+  tft.setCursor(8, y);
+  tft.print(text);
+}
+
 void drawValues() {
   char buf[40];
-  tft.setTextSize(2);
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.setCursor(8, 40);
   if (isnan(phValue)) snprintf(buf, sizeof buf, "pH   --      ");
   else snprintf(buf, sizeof buf, "pH   %4.2f    ", phValue);
-  tft.print(buf);
-  tft.setCursor(8, 65);
+  drawLine(0, 40, 2, ILI9341_WHITE, buf);
   if (isnan(waterTempC)) snprintf(buf, sizeof buf, "Temp --.- C  ");
   else snprintf(buf, sizeof buf, "Temp %4.1f C  ", waterTempC);
-  tft.print(buf);
-  tft.setCursor(8, 90);
+  drawLine(1, 65, 2, ILI9341_WHITE, buf);
   if (isnan(tdsVolts)) snprintf(buf, sizeof buf, "TDS  --      ");
   else snprintf(buf, sizeof buf, "TDS  %4.2f V  ", tdsVolts);
-  tft.print(buf);
+  drawLine(2, 90, 2, ILI9341_WHITE, buf);
 
-  tft.setCursor(8, 120);
   bool leak = leak1 || leak2;
-  tft.setTextColor(leak ? ILI9341_RED : ILI9341_GREEN, ILI9341_BLACK);
   snprintf(buf, sizeof buf, "Leak %s%s     ", leak1 ? "1 " : "", leak2 ? "2" : (leak1 ? "" : "none"));
-  tft.print(buf);
+  drawLine(3, 120, 2, leak ? ILI9341_RED : ILI9341_GREEN, buf);
 
-  tft.setTextSize(1);
   for (int i = 0; i < 2; i++) {
     Port &p = ports[i];
-    tft.setTextColor(p.state == PORT_ON ? ILI9341_GREEN : p.state == PORT_REJECTED ? ILI9341_RED : ILI9341_LIGHTGREY, ILI9341_BLACK);
-    tft.setCursor(8, 155 + i * 14);
     snprintf(buf, sizeof buf, "%s: %s CC %4d/%4d mV ", p.name, portText(p), p.mv1, p.mv2);
-    tft.print(buf);
+    drawLine(4 + i, 155 + i * 14, 1, p.state == PORT_ON ? ILI9341_GREEN : p.state == PORT_REJECTED ? ILI9341_RED : ILI9341_LIGHTGREY, buf);
   }
-  tft.setTextColor(ILI9341_DARKGREY, ILI9341_BLACK);
-  tft.setCursor(8, 190);
   snprintf(buf, sizeof buf, "ADC %s  PD %s  %s   ", adsOk ? "ok" : "--", pdOk ? "ok" : "--", maintenance ? "MAINTENANCE" : "           ");
-  tft.print(buf);
+  drawLine(6, 190, 1, ILI9341_DARKGREY, buf);
 }
 
 // ---------------------------------------------------------------- setup / loop

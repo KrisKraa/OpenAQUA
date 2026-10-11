@@ -19,11 +19,22 @@ exactly like the R2 board (same GPIOs). `sketch.ino` is that firmware with `SIMU
 | **pH probe** knob vs **VOCM** knob | pH electrode signal (ADS1115 AIN1 − AIN3) | same position = pH 7.00; ~59 mV difference = 1 pH unit |
 | **TDS** knob | TDS front end (AIN0) | raw volts on screen (TDS isn't calibrated yet) |
 | **DS18B20** (click it) | water temperature | temperature on screen; also sets pH temperature compensation |
-| **Leak 1 / Leak 2** switches | leak probes in water | "Leak" turns red, button flashes red; long-press (>1 s) the button to acknowledge |
+| **Leak 1 / Leak 2** switches (left = dry, right = wet) | leak probes in water | "Leak" turns red, button flashes red; long-press (>1 s) the button to acknowledge |
 | **Front button** short press | maintenance mode | button turns blue |
 | **Port1 / Port2 CC1** sliders | what is plugged into a module port | 61–76 % (2.0–2.5 V) = OpenAQUA module → after 0.5 s the orange **VBUS** LED turns on; 24–48 % (0.8–1.6 V) = phone/USB device → port refused, its red LED blinks; anything else = empty, VBUS off at once |
 
 The screen shows every reading plus the raw CC voltages; the serial monitor shows what was found on I2C.
+
+## Tested in Wokwi (2026-10-11)
+
+All rows above were checked in the simulator: module port on after 0.5 s and off within ~0.1 s of
+unplugging, phone refused (VBUS stays off), leak alarm flash + long-press acknowledge, maintenance
+toggle, pH 7.00 at equal knobs and 6.01 at +58 mV / 22 C, TDS 3.30 V at full scale.
+
+Simulator quirks this project works around (both only active with `SIMULATION 1`, or only in the
+simulated ADC chip): Wokwi's `analogReadMilliVolts()` calibration is off (2.26 V reads as 2557 mV), so
+the sketch converts the raw `analogRead()` instead; and custom chips get analog inputs on a 5 V scale,
+so `ads1115.chip.c` rescales them to 3.3 V.
 
 ## Not simulated
 
