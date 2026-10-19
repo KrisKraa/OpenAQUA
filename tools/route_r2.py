@@ -20,7 +20,8 @@ from pcbtool import U, new_gid, _fmt
 import dsn as D
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
-FR = os.environ.get('FREEROUTING_DIR', '/private/tmp/claude-501/-Users-kris-Documents-Claude-Local/b61844df-efaa-4680-8dcb-24ec437a143c/scratchpad/fr')
+# Freerouting 2.5.0 jar + a Java 25 runtime (the native CLI crashes on keepouts/planes)
+FR = os.environ.get('FREEROUTING_DIR', os.path.expanduser('~/freerouting'))
 JAVA = os.path.join(FR, 'jre/Contents/Home/bin/java')
 JAR = os.path.join(FR, 'freerouting-2.5.0.jar')
 
