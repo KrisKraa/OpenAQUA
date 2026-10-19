@@ -5,6 +5,7 @@
 | `SCH_OpenAQUA_R2.json` | Schematic, all R2 fixes applied (EasyEDA Std source) |
 | `PCB_OpenAQUA_R2.json` | 2-layer PCB, placed and routed, GND pours on both layers |
 | `sch_preview/` | PNG previews of the schematic |
+| `pcb_preview/` | PNG previews of the routed board (top and bottom copper) |
 
 Why everything changed: see [`docs/r2-design-review.md`](../../../docs/r2-design-review.md).
 Pin map: [`docs/gpio-map.md`](../../../docs/gpio-map.md). Module port rules: [`docs/module-port-spec.md`](../../../docs/module-port-spec.md).
@@ -15,7 +16,7 @@ Pin map: [`docs/gpio-map.md`](../../../docs/gpio-map.md). Module port rules: [`d
 2. **File → Open → EasyEDA Source…** and pick `SCH_OpenAQUA_R2.json`. Save it into your project (**File → Save As**, choose your OpenAQUA project).
 3. Do the same for `PCB_OpenAQUA_R2.json` and save it into the **same** project.
 4. In the PCB: **Tools → Copper Area → Rebuild All Copper Areas** (shortcut **Shift+B**). The pour outlines are in the file but their fill is computed by EasyEDA.
-5. Run **Design → Design Rule Check**. Rules used for routing: 0.2 mm clearance, 0.25 mm default track, 0.6/0.3 mm vias (JLCPCB standard 2-layer is fine with this).
+5. Run **Design → Design Rule Check**. The file's DRC rules are JLCPCB's standard 2-layer limits: 0.15 mm track/clearance, 0.6/0.3 mm vias (the routing itself keeps 0.2 mm clearance). Expect 0 errors.
 6. Optional: open the 3D view and check against `mechanical/Main Controller.step`.
 
 If you later change the schematic, use **Design → Update PCB** from the schematic with both documents in the same project.

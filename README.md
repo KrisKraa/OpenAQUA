@@ -1,4 +1,11 @@
-![Schermafbeelding 2026-03-23 042119](https://github.com/user-attachments/assets/ee96b528-7c6d-4f7f-883b-4049ffa65d9b) ![Schermafbeelding 2026-03-23 042143](https://github.com/user-attachments/assets/190f3302-b794-434f-9612-784098911449)# OpenAQUA
+# OpenAQUA
+
+![OpenAQUA main controller R2, 3D view of the board](docs/images/r2/pcb_3d.jpg)
+
+| 3D-printed case (render) | |
+|---|---|
+| ![OpenAQUA case, top view](docs/images/r2/case_top.jpg) | ![OpenAQUA case, standing](docs/images/r2/case_hero.jpg) |
+
 🌊 Modular Water System Controller (ESP32 + CAN)
 
 This project is a modular, scalable water system controller built around the ESP32-S3 and a CAN-based expansion architecture. It is designed to monitor and control parameters like pH, TDS, temperature, and leaks, while supporting future expansion modules such as power strips, fleece rollers, and more.
@@ -120,12 +127,12 @@ Each module:
 - Sensor interfaces (pH, TDS, temp, leak)
 - ADC integration (ADS1115)
 - Modular system architecture defined
+- R2 schematic + 2-layer PCB layout (routed, EasyEDA DRC 0 errors, JLCPCB parts in stock)
+- Bring-up firmware (display, RGB button, sensors, leak alarm, module-port detection), tested in the Wokwi simulator
 
 🔄 In Progress
-- Display integration (FPC-based TFT)
-- RGB button interface
+- Community review of R2 before ordering the first prototype (see below)
 - TDS analog front-end refinement
-- PCB layout
 
 🔜 Planned
 - CAN protocol definition
@@ -171,7 +178,40 @@ installed backwards. R2 fixes these plus a batch of smaller issues (capacitor vo
 missing CC-based module identification on the module ports, an ESP32 GPIO remap, and a rework
 of the pH analog front end), and adds proper USB-C identification for expansion modules.
 
+| Routing (top red, bottom blue) | Schematic |
+|---|---|
+| ![R2 routing](hardware/main-controller/r2/pcb_preview/routed_top.png) | ![R2 schematic](docs/images/r2/schematic_r2.png) |
+
+Full-size schematic: [PNG](docs/images/r2/schematic_r2.png) · [SVG (zoomable)](docs/images/r2/schematic_r2.svg) · copper layers separately: [top / bottom](hardware/main-controller/r2/pcb_preview/copper_top_bottom.png)
+
 See:
+- [`hardware/main-controller/r2/`](hardware/main-controller/r2/) — EasyEDA Standard schematic + PCB (import steps in its README)
 - [`docs/r2-design-review.md`](docs/r2-design-review.md) — what changed and why, block by block
 - [`docs/module-port-spec.md`](docs/module-port-spec.md) — spec for anyone designing an expansion module
 - [`docs/gpio-map.md`](docs/gpio-map.md) — full ESP32-S3 pin map
+- [`docs/ordering-steps.md`](docs/ordering-steps.md) — from these files to a JLCPCB order
+- [`firmware/openaqua-main-r2/`](firmware/openaqua-main-r2/) — bring-up firmware (Arduino, ESP32-S3)
+- [`simulation/wokwi/`](simulation/wokwi/) — the same firmware in the free Wokwi simulator, wired like the board
+
+### 🔍 Looking for feedback before ordering the first prototype
+
+The first assembled R2 prototypes cost about €200, so I'd love a second pair of eyes first.
+Especially on:
+
+1. **USB-C PD input (STUSB4500)**: pin strapping, reset, VBUS discharge. Does it look right?
+2. **Buck converter (MP1584EN, 20 V → 5 V)**: component values and the layout of the switch node, input caps and feedback.
+3. **pH front end (LMP91200 → ADS1115 differential)**: guard ring, VOCM/VREF wiring, and whether it will stay quiet next to the buck.
+4. **Module ports**: USB-C connectors carrying CAN + switched 20 V, with CC-based module detection (22k Rd) and AO3407 high-side switches. Any safety problem? (See `docs/module-port-spec.md`.)
+5. **2-layer layout**: GND return paths, the 20 V trunk, the antenna keep-out.
+6. Anything that would stop the board from powering up or being programmed over USB.
+
+Known open points are listed under "Still open" in [`docs/r2-design-review.md`](docs/r2-design-review.md).
+Comments are welcome as a GitHub issue, on Reddit, or on Discord.
+
+### Earlier version (R1)
+
+The first layout, kept for comparison. It would not have powered up; see the design review.
+
+| R1 3D view | R1 layout |
+|---|---|
+| ![R1 3D](docs/images/r1/r1_pcb_3d.jpg) | ![R1 layout](docs/images/r1/r1_pcb_layout.jpg) |

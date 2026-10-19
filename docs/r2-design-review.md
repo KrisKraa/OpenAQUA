@@ -185,8 +185,7 @@ show up on day one but causes field failures later.
 
 ## Layout
 
-The board layout is still in progress (by the lead), but the plan is a 2-layer, 154 × 67 mm
-board with a solid GND plane on the bottom layer, split into zones: power (USB-C PD input +
+The board is laid out and routed as a 2-layer, 154 × 67 mm board with a solid GND plane on the bottom layer, split into zones: power (USB-C PD input +
 buck) top-left; ESP32 top-middle, with its antenna at the board's top edge and no copper
 underneath it (on the original layout the antenna pointed into the middle of the board, partly
 under the display — bad for WiFi range); analog front-end (pH/TDS/ADC) bottom-left/middle, kept
@@ -206,9 +205,8 @@ holes, 3 USB-C openings, and 3 LED slots, all within 0.25 mm). The button is a l
   isolated pH front end would be the robust fix, but that's a later-revision change, not R2.
 - **Status LEDs LED4/5/6** are top-emitting 0603 parts sitting next to 1 mm side slots in the
   case — side-emitting LEDs, or light pipes, would work better.
-- **The PCB layout itself isn't finished yet** — the plan above is a work in progress.
-- **Firmware** still needs to actually drive all of this (see below) — none of the board fixes
-  do anything on their own without firmware support.
+- **Firmware**: bring-up firmware exists (`firmware/openaqua-main-r2/`, tested in the Wokwi
+  simulator), but STUSB4500 PDO programming and the CAN protocol are not written yet (see below).
 - **No TVS protection on the USB-C input's VBUS/CC lines.** Considered low risk since PD
   sources always start by presenting 5 V before any higher voltage is negotiated, but a later
   revision could add an ESDA25P35 (or similar) at R3 on that input for extra margin.
@@ -240,7 +238,9 @@ holes, 3 USB-C openings, and 3 LED slots, all within 0.25 mm). The button is a l
   bus voltage feeding the ports isn't always 20 V (a plain PC USB port behaves as 5 V, and a
   charger that can't do 20 V may fall back to 15 V), so firmware needs to know what's actually
   on the bus rather than assuming 20 V.
-- Switch a port's VBUS off within about 1 ms of its CC line reading open.
+- Switch a port's VBUS off within about 1 ms of its CC line reading open. The bring-up firmware
+  polls the ports from `loop()` (a few ms per pass, longer while the display redraws); a timer
+  interrupt or comparator would be needed to guarantee 1 ms.
 - Read the leak inputs (GPIO12/13) as plain digital inputs, not through the ADC — they're on
   ADC2, which doesn't work reliably with Wi-Fi active.
 
