@@ -1,0 +1,6 @@
+# Wokwi Library List
+Adafruit GFX Library
+Adafruit ILI9341
+Adafruit ADS1X15
+OneWire
+DallasTemperature

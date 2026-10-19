@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+hardware/main-controller/r2/work/
+.omc/
