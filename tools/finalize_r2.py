@@ -182,6 +182,13 @@ def main():
         if s.startswith('LIB~'):
             parts_ = s.split('#@$'); h = parts_[0].split('~')
             if h[7] != '1': h[7] = '1'; parts_[0] = '~'.join(h); p.shape[i] = '#@$'.join(parts_)
+    # TrueType texts (OpenAQUA_R2, OTG) lost their outline path when moved/renamed; EasyEDA then
+    # draws them with the 1 mm stroke width as a blob (3D view, Gerbers). Use the stroke font.
+    for i, s in enumerate(p.shape):
+        f = s.split('~')
+        if f[0] == 'TEXT' and len(f) > 14 and f[14] and not f[11]:
+            f[14] = ''; f[4] = str(max(0.8, round(float(f[9]) * 0.1, 2)))
+            p.shape[i] = '~'.join(f)
     p.save(DST)
     print('stitching vias:', added, '->', DST)
 
