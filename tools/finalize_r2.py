@@ -139,6 +139,7 @@ def main():
     for i, s in enumerate(p.shape):
         if s.startswith('TEXT') and '~OpenAQUA_R1~' in s:
             f = s.split('~'); f[10] = 'OpenAQUA_R2'; f[11] = ''
+            f[9] = '6.3'; f[2] = str(round(float(f[2]) - 1 / U, 4))  # stroke font is wider: 1.6 mm, 1 mm left, clear of the hole
             p.shape[i] = '~'.join(f)
     # silkscreen: readable reference designators next to their parts
     import silk_r2
